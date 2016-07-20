@@ -66,7 +66,7 @@ public:
 
   DHT_MODEL_t getModel() { return model; }
 
-  int getMinimumSamplingPeriod() { return model == DHT11 ? 1000 : 2000; }
+  unsigned int getMinimumSamplingPeriod() { return model == DHT11 ? 1000 : 2000; }
 
   int8_t getNumberOfDecimalsTemperature() { return model == DHT11 ? 0 : 1; };
   int8_t getLowerBoundTemperature() { return model == DHT11 ? 0 : -40; };
