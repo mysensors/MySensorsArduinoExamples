@@ -20,7 +20,7 @@
  *
  * REVISION HISTORY
  * Version 1.0: Henrik EKblad
- * 2016-07-20: Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
+ * Version 1.1 - 2016-07-20: Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
  * 
  * DESCRIPTION
  * This sketch provides an example how to implement a humidity/temperature
