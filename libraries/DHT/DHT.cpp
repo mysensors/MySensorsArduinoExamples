@@ -24,6 +24,7 @@
    2013-06-10: Initial version
    2013-06-12: Refactored code
    2013-07-01: Add a resetTimer method
+   2016-07-20: Add force parameter - Torben Woltjen (mozzbozz)
  ******************************************************************/
 
 #include "DHT.h"
@@ -108,13 +109,15 @@ const char *DHT::getStatusString() {
 
 #endif
 
-void DHT::readSensor()
+void DHT::readSensor(bool force)
 {
   // Make sure we don't poll the sensor too often
   // - Max sample rate DHT11 is 1 Hz   (duty cicle 1000 ms)
   // - Max sample rate DHT22 is 0.5 Hz (duty cicle 2000 ms)
+  // If 'force' is true, the user has to take care of this -> this way, the
+  // microcontroller can be set to sleep where it doesn't increase millis().
   unsigned long startTime = millis();
-  if ( (unsigned long)(startTime - lastReadTime) < (model == DHT11 ? 999L : 1999L) ) {
+  if ( !force && (unsigned long)(startTime - lastReadTime) < (model == DHT11 ? 999L : 1999L) ) {
     return;
   }
   lastReadTime = startTime;

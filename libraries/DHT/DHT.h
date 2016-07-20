@@ -24,6 +24,7 @@
    2013-06-10: Initial version
    2013-06-12: Refactored code
    2013-07-01: Add a resetTimer method
+   2016-07-20: Add force parameter - Torben Woltjen (mozzbozz)
  ******************************************************************/
 
 #ifndef dht_h
@@ -58,6 +59,7 @@ public:
   void setup(uint8_t pin, DHT_MODEL_t model=AUTO_DETECT);
   void resetTimer();
 
+  void readSensor(bool force=false);
   float getTemperature();
   float getHumidity();
 
@@ -80,8 +82,6 @@ public:
   static float toCelsius(float fromFahrenheit) { return (fromFahrenheit - 32.0) / 1.8; };
 
 protected:
-  void readSensor();
-
   float temperature;
   float humidity;
 
