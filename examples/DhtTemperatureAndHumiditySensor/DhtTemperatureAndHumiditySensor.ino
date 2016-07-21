@@ -23,8 +23,8 @@
  * Version 1.1 - 2016-07-20: Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
  * 
  * DESCRIPTION
- * This sketch provides an example how to implement a humidity/temperature
- * sensor using DHT11/DHT-22.
+ * This sketch provides an example of how to implement a humidity/temperature
+ * sensor using a DHT11/DHT-22.
  *  
  * For more information, please visit:
  * http://www.mysensors.org/build/humidity
@@ -43,7 +43,7 @@
 #include <MySensors.h>  
 #include <DHT.h>
 
-// Set the pin you connected the DHT's data pin to
+// Set this to the pin you connected the DHT's data pin to
 #define DHT_DATA_PIN 2
 
 // Set this offset if the sensor has a permanent small offset to the real temperatures
@@ -54,7 +54,7 @@
 static const uint64_t UPDATE_INTERVAL = 60000;
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
-// timestamp of the last update doesn't show something like 3 hours, in the unlikely case, that
+// timestamp of the last update doesn't show something like 3 hours in the unlikely case, that
 // the value didn't change since;
 // i.e. the sensor would force sending an update every UPDATE_INTERVAL*FORCE_UPDATE_N_READS [ms]
 static const uint8_t FORCE_UPDATE_N_READS = 10;
@@ -75,7 +75,7 @@ DHT dht;
 
 void presentation()  
 { 
-  // Send the Sketch Version Information to the Gateway
+  // Send the sketch version information to the gateway
   sendSketchInfo("TemperatureAndHumidity", "1.1");
   
   // Register all sensors to gw (they will be created as child devices)
@@ -86,13 +86,14 @@ void presentation()
 }
 
 
-void setup() {
+void setup()
+{
   dht.setup(DHT_DATA_PIN); // set data pin of DHT sensor
   if (UPDATE_INTERVAL <= dht.getMinimumSamplingPeriod()) {
     Serial.println("Warning: UPDATE_INTERVAL is smaller than supported by the sensor!");
   }
   // Sleep for the time of the minimum sampling period to give the sensor time to power up
-  // (otherwise, timeout erros might occure)
+  // (otherwise, timeout errors might occure for the first reading)
   sleep(dht.getMinimumSamplingPeriod());
 }
 
