@@ -79,7 +79,7 @@ float pressureAvg;
 float pressureAvg2;
 
 float dP_dt;
-boolean metric;
+bool metric;
 MyMessage tempMsg(TEMP_CHILD, V_TEMP);
 MyMessage pressureMsg(BARO_CHILD, V_PRESSURE);
 MyMessage forecastMsg(BARO_CHILD, V_FORECAST);

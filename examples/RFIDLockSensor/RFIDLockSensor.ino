@@ -107,7 +107,7 @@ void presentation()  {
 }
  
 void loop() {
-  boolean success;
+  bool success;
   uint8_t key[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
   uint8_t currentKeyLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 
@@ -132,7 +132,7 @@ void loop() {
 
     Serial.println("");
 
-    boolean valid = false;
+    bool valid = false;
     // Compare this key to the valid once registered here in sketch 
     for (int i=0;i<keyCount && !valid;i++) {
       for (int j=0;j<currentKeyLength && !valid;j++) {

@@ -101,7 +101,7 @@ MyMessage msgTrippedVar2(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
   DHT dht;
   float lastTemp;
   float lastHum;
-  boolean metric = true;
+  bool metric = true;
   MyMessage msgHum(CHILD_ID_HUM, V_HUM);
   MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
 #endif
@@ -133,7 +133,7 @@ byte state = 0;
 byte oldState = -1;
 unsigned int lastRainRate = 0;
 int lastMeasure = 0;
-boolean gotTime = false;
+bool gotTime = false;
 byte lastHour;
 byte currentHour;
 //
@@ -162,7 +162,7 @@ void setup()
   //
   //retrieve from EEPROM stored values on a power cycle.
   //
-  boolean isDataOnEeprom = false;
+  bool isDataOnEeprom = false;
   for (int i = 0; i < E_BUFFER_LENGTH; i++)
   {
     byte locator = loadState(EEPROM_BUFFER_LOCATION + i);
@@ -590,7 +590,7 @@ void prettyFade(void)
 
 void slowFlash(void)
 {
-  static boolean ledState = true;
+  static bool ledState = true;
   static unsigned long pulseStart = millis();
   if (millis() - pulseStart < 100UL)
   {

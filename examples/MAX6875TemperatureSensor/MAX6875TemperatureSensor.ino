@@ -53,7 +53,7 @@ uint8_t units = 1; // Units to readout temp (0 = ˚F, 1 = ˚C)
 float temperature = 0.0; // Temperature output variable
 float lastTemperature;
 unsigned long SLEEP_TIME = 30000;
-boolean metric = true;
+bool metric = true;
 
 MyMessage msg(0, V_TEMP);
 

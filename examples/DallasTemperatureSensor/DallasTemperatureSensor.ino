@@ -46,8 +46,8 @@ OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with a
 DallasTemperature sensors(&oneWire); // Pass the oneWire reference to Dallas Temperature. 
 float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
-boolean receivedConfig = false;
-boolean metric = true; 
+bool receivedConfig = false;
+bool metric = true;
 // Initialize temperature message
 MyMessage msg(0,V_TEMP);
 

@@ -46,7 +46,7 @@ unsigned long SLEEP_TIME = 5000; // Sleep time between reads (in milliseconds)
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 MyMessage msg(CHILD_ID, V_DISTANCE);
 int lastDist;
-boolean metric = true; 
+bool metric = true;
 
 void setup()  
 { 

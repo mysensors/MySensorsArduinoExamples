@@ -66,7 +66,7 @@ float lastTemp;
 float lastHum;
 uint8_t nNoUpdatesTemp;
 uint8_t nNoUpdatesHum;
-boolean metric = true; 
+bool metric = true;
 
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
