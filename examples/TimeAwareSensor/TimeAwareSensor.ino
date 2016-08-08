@@ -36,7 +36,7 @@
 #include <MySensors.h>  
 #include <Time.h>  
 
-boolean timeReceived = false;
+bool timeReceived = false;
 unsigned long lastUpdate=0, lastRequest=0;
 
 void setup()  

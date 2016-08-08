@@ -145,10 +145,10 @@ int lastValve;
 unsigned long startMillis;
 const int ledPin = 5;
 const int waterButtonPin = 3;
-boolean buttonPushed = false;
-boolean showTime = true;
-boolean clockUpdating = false;
-boolean recentUpdate = true;
+bool buttonPushed = false;
+bool showTime = true;
+bool clockUpdating = false;
+bool recentUpdate = true;
 const char *dayOfWeek[] = {
   "Null", "Sunday ", "Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday ", "Saturday "
 };
@@ -246,7 +246,7 @@ void setup()
     lcd.setCursor(0, 1);
     lcd.print(F(" Valve Data: "));
     lcd.print(i);
-    boolean flashIcon = false;
+    bool flashIcon = false;
     DEBUG_PRINT(F("Calling for Valve "));
     DEBUG_PRINT(i);
     DEBUG_PRINTLN(F(" Data..."));
@@ -542,7 +542,7 @@ void slowToggleLED ()
 //
 void receive(const MyMessage &message)
 {
-  boolean zoneTimeUpdate = false;
+  bool zoneTimeUpdate = false;
   if (message.isAck())
   {
     DEBUG_PRINTLN(F("This is an ack from gateway"));
@@ -656,7 +656,7 @@ void receive(const MyMessage &message)
 void updateDisplay()
 {
   static unsigned long lastUpdateTime;
-  static boolean displayToggle = false;
+  static bool displayToggle = false;
   //static byte toggleCounter = 0;
   static SprinklerStates lastDisplayState;
   if (state != lastDisplayState || millis() - lastUpdateTime >= 3000UL)

@@ -100,7 +100,7 @@ MyMessage off(CHILD_ID, V_SCENE_OFF);
 UTFT myGLCD(ITDB32S,38,39,40,41);
 UTouch  myTouch( 6, 5, 4, 3, 2);
 UTFT_Buttons  myButtons(&myGLCD, &myTouch);
-boolean timeReceived = false;
+bool timeReceived = false;
 unsigned long lastTimeUpdate=0, lastRequest=0;
 char timeBuf[20];
 

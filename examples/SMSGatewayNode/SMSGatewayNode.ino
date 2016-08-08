@@ -122,8 +122,8 @@
 
 // variables
 
-boolean KnowMyOwner = false;
-boolean MsgReceived = false;
+bool KnowMyOwner = false;
+bool MsgReceived = false;
 uint16_t smslen = 0;
 int8_t smsnum = 0;
 int bufferindex = 0;

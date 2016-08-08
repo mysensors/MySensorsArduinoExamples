@@ -75,7 +75,7 @@ const float SEALEVEL_PRESSURE = 1013.25;
 DHT dht;
 float lastTemp;
 float lastHum;
-boolean metric = true;
+bool metric = true;
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP2, V_TEMP);
 
