@@ -51,10 +51,14 @@ bool metric = true;
 // Initialize temperature message
 MyMessage msg(0,V_TEMP);
 
-void setup()  
-{ 
+void before()
+{
   // Startup up the OneWire library
   sensors.begin();
+}
+
+void setup()  
+{ 
   // requestTemperatures() will not block current thread
   sensors.setWaitForConversion(false);
 }
