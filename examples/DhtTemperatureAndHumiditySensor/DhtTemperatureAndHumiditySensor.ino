@@ -80,6 +80,8 @@ void presentation()
   
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM);
+  // Delay between each present process.
+  wait(500);
   present(CHILD_ID_TEMP, S_TEMP);
   
   metric = getConfig().isMetric;
@@ -147,6 +149,8 @@ void loop()
     nNoUpdatesHum++;
   }
 
+  // Delay before going to sleep so we can potentially respond to "present" requests from the gateway.
+  wait(1000);
   // Sleep for a while to save energy
   sleep(UPDATE_INTERVAL); 
 }
