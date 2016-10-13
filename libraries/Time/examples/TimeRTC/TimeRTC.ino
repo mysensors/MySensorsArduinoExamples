@@ -4,12 +4,13 @@
  * 
  */
 
-#include <Time.h>  
-#include <Wire.h>  
+#include <TimeLib.h>
+#include <Wire.h>
 #include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
 
 void setup()  {
   Serial.begin(9600);
+  while (!Serial) ; // wait until Arduino Serial Monitor opens
   setSyncProvider(RTC.get);   // the function to get the time from the RTC
   if(timeStatus()!= timeSet) 
      Serial.println("Unable to sync with the RTC");
@@ -19,8 +20,15 @@ void setup()  {
 
 void loop()
 {
-   digitalClockDisplay();  
-   delay(1000);
+  if (timeStatus() == timeSet) {
+    digitalClockDisplay();
+  } else {
+    Serial.println("The time has not been set.  Please run the Time");
+    Serial.println("TimeRTCSet example, or DS1307RTC SetTime example.");
+    Serial.println();
+    delay(4000);
+  }
+  delay(1000);
 }
 
 void digitalClockDisplay(){

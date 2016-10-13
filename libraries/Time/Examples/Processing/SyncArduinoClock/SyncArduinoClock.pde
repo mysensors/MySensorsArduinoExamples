@@ -12,9 +12,12 @@
  
 
 import processing.serial.*;
+import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
-public static final short portIndex = 1;  // select the com port, 0 is the first port
-public static final char TIME_HEADER = 'T'; //header byte for arduino serial time message 
+public static final short portIndex = 0;  // select the com port, 0 is the first port
+public static final String TIME_HEADER = "T"; //header for arduino serial time message 
 public static final char TIME_REQUEST = 7;  // ASCII bell character 
 public static final char LF = 10;     // ASCII linefeed
 public static final char CR = 13;     // ASCII linefeed
@@ -25,10 +28,15 @@ void setup() {
   println(Serial.list());
   println(" Connecting to -> " + Serial.list()[portIndex]);
   myPort = new Serial(this,Serial.list()[portIndex], 9600);
+  println(getTimeNow());
 }
 
 void draw()
 {
+  textSize(20);
+  textAlign(CENTER);
+  fill(0);
+  text("Click to send\nTime Sync", 0, 75, 200, 175);
   if ( myPort.available() > 0) {  // If data is available,
     char val = char(myPort.read());         // read it and store it in val
     if(val == TIME_REQUEST){
@@ -52,19 +60,19 @@ void mousePressed() {
 }
 
 
-void sendTimeMessage(char header, long time) {  
+void sendTimeMessage(String header, long time) {  
   String timeStr = String.valueOf(time);  
   myPort.write(header);  // send header and time to arduino
-  myPort.write(timeStr);   
+  myPort.write(timeStr); 
+  myPort.write('\n');  
 }
 
 long getTimeNow(){
   // java time is in ms, we want secs    
-  GregorianCalendar cal = new GregorianCalendar();
-  cal.setTime(new Date());
-  int	tzo = cal.get(Calendar.ZONE_OFFSET);
-  int	dst = cal.get(Calendar.DST_OFFSET);
-  long now = (cal.getTimeInMillis() / 1000) ; 
-  now = now + (tzo/1000) + (dst/1000); 
-  return now;
+  Date d = new Date();
+  Calendar cal = new GregorianCalendar();
+  long current = d.getTime()/1000;
+  long timezone = cal.get(cal.ZONE_OFFSET)/1000;
+  long daylight = cal.get(cal.DST_OFFSET)/1000;
+  return current + timezone + daylight; 
 }

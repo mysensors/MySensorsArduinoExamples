@@ -90,9 +90,9 @@ illustrating how the library can be used with various time sources:
   The NTP protocol uses UDP and the UdpBytewise library is required, see:
   http://bitbucket.org/bjoern/arduino_osc/src/14667490521f/libraries/Ethernet/
 
--TimeGPS gets time from a GPS
- This requires the TinyGPS and NewSoftSerial libraries from Mikal Hart:
- http://arduiniana.org/libraries/TinyGPS and http://arduiniana.org/libraries/newsoftserial/
+- TimeGPS gets time from a GPS
+  This requires the TinyGPS library from Mikal Hart:
+  http://arduiniana.org/libraries/TinyGPS
 
 Differences between this code and the playground DateTime library
 although the Time library is based on the DateTime codebase, the API has changed.
