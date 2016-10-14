@@ -50,7 +50,7 @@ static const uint32_t GPSBaud = 9600;
 const int offset = 1;   
 
 #include <SPI.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <MySensors.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>

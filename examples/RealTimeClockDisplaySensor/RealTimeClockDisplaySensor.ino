@@ -48,7 +48,7 @@
  
 #include <SPI.h>
 #include <MySensors.h>  
-#include <Time.h>  
+#include <TimeLib.h> 
 #include <DS3232RTC.h>  // A  DS3231/DS3232 library
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
