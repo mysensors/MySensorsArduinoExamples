@@ -62,7 +62,7 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#include <Time.h>  
+#include <TimeLib.h> 
 #include <SPI.h>
 #include <MySensors.h>  
 #include <stdarg.h>

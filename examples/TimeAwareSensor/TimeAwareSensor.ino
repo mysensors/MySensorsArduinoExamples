@@ -34,7 +34,7 @@
 
 #include <SPI.h>
 #include <MySensors.h>  
-#include <Time.h>  
+#include <TimeLib.h> 
 
 bool timeReceived = false;
 unsigned long lastUpdate=0, lastRequest=0;

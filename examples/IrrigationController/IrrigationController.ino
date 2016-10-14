@@ -91,7 +91,7 @@ Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (p
 //#define MY_NODE_ID 1  // Set this to fix your Radio ID or use Auto
 
 #include <Wire.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <SPI.h>
 #include <MySensors.h>
 #include <LiquidCrystal.h>

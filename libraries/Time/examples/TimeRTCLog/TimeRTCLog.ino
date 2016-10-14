@@ -6,8 +6,8 @@
  * the time of the event and time since the previous event is calculated and sent to the serial port. 
  */
 
-#include <Time.h>  
-#include <Wire.h>  
+#include <TimeLib.h>
+#include <Wire.h>
 #include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
 
 const int nbrInputPins  = 6;             // monitor 6 digital pins 
@@ -20,8 +20,9 @@ void setup()  {
   setSyncProvider(RTC.get);   // the function to sync the time from the RTC  
   for(int i=0; i < nbrInputPins; i++){
      pinMode( inputPins[i], INPUT);
-     // digitalWrite( inputPins[i], HIGH);  // uncomment these lines if 
-     // state[i] = HIGH;                    // pull-up resistors are wanted
+     // uncomment these lines if pull-up resistors are wanted
+     // pinMode( inputPins[i], INPUT_PULLUP);
+     // state[i] = HIGH;
   }
 }
 

@@ -47,7 +47,7 @@
 #include <SPI.h>
 #include <MySensors.h>
 #include <math.h>
-#include <Time.h>
+#include <TimeLib.h>
 
 #define SKETCH_NAME "Rain Gauge"
 #define SKETCH_VERSION "1.4.1a"
