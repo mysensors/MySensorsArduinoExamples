@@ -3,7 +3,7 @@
 
  April 26, 2015
 
- Version 1.4.1 alpha
+ Version 2.0
 
  Arduino Tipping Bucket Rain Gauge
 
@@ -29,38 +29,36 @@
  * Optional Temp/Humidity (DHT-22 or DHT-11) and Light LUX (BH1750) sensors. To use, uncomment
    #define DHT_ON  and/or #define LUX_ON
  * Optionally send total accumulation of each day's rainfall or send only individual days rainfall totals.
-   Comment out #define USE_DAILY to display individual daily rainfall.
+   Uncomment #define USE_DAILY to display individual daily rainfall.  If it is commented out it will display
+   a cumulative total rainfall (day4 = day1+day2+day3+day4 etc)
 
  by @BulldogLowell and @PeteWill for free public use
 
  */
 
-// Enable debug prints to serial monitor
-#define MY_DEBUG 
+//#define MY_DEBUG // Enable MySensors debug prints to serial monitor
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-//#define MY_NODE_ID 7
+//#define MY_NODE_ID 7 //uncomment this line to assign a static ID
 
-#include <SPI.h>
-#include <MySensors.h>
 #include <math.h>
 #include <TimeLib.h>
+#include <MySensors.h>
 
 #define SKETCH_NAME "Rain Gauge"
-#define SKETCH_VERSION "1.4.1a"
+#define SKETCH_VERSION "2.0"
 
-#define DWELL_TIME 125  // this allows for radio to come back to power after a transmission, ideally 0 
+#define DWELL_TIME 40  // this allows for radio to come back to power after a transmission, ideally 0 
 
-//#define DEBUG_ON  // comment out this line to disable serial debug
+//#define DEBUG_ON  // Rain gauge specific debug messages. 
 #define DHT_ON // uncomment out this line to enable DHT sensor
 #define LUX_ON // uncomment out this line to enable BH1750 sensor
-//#define USE_DAILY // displays each time segment as an accumulation of prior periods inclusive.  Comment out to display individual daily rainfall totals in the variables sent to your controller.
+//#define USE_DAILY // Uncomment to display individual daily rainfall totals in the variables sent to your controller. If it's commented it will add each day to the next for a cumulative total.
 
 #define TIP_SENSOR_PIN 3
-
 #define CALIBRATE_FACTOR 60 // amount of rain per rain bucket tip e.g. 5 is .05mm
 #define DHT_LUX_DELAY 300000  //Delay in milliseconds that the DHT and LUX sensors will wait before sending data
 
@@ -114,32 +112,61 @@ MyMessage msgTrippedVar2(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
   BH1750 lightSensor;
   MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL);
   unsigned int lastlux;
-  byte heartbeat = 10; //Used to send the light lux to gateway as soon as the device is restarted and after the DHT_LUX_DELAY has happened 10 times
+  uint8_t heartbeat = 10; //Used to send the light lux to gateway as soon as the device is restarted and after the DHT_LUX_DELAY has happened 10 times
 #endif
 unsigned long sensorPreviousMillis;
 int eepromIndex;
+int tipSensorPin = 3; // Pin the tipping bucket is connected to. Must be interrupt capable pin
 int ledPin = 5; // Pin the LED is connected to.  PWM capable pin required
+#ifdef DEBUG_ON
 unsigned long dataMillis;
 unsigned long serialInterval = 600000UL;
+#endif
 const unsigned long oneHour = 3600000UL;
 unsigned long lastTipTime;
 unsigned long lastRainTime; //Used for rainRate calculation
 unsigned int rainBucket [RAIN_BUCKET_SIZE] ; /* 24 hours x 5 Days = 120 hours */
 unsigned int rainRate = 0;
-byte rainWindow = 72;         //default rain window in hours.  Will be overwritten with msgTrippedVar1.
+uint8_t rainWindow = 72;         //default rain window in hours.  Will be overwritten with msgTrippedVar1.
 volatile int wasTippedBuffer = 0;
 int rainSensorThreshold = 50; //default rain sensor sensitivity in hundredths.  Will be overwritten with msgTrippedVar2.
-byte state = 0;
-byte oldState = -1;
+uint8_t state = 0;
+uint8_t oldState = 2; //Setting the default to something other than 1 or 0
 unsigned int lastRainRate = 0;
 int lastMeasure = 0;
 bool gotTime = false;
-byte lastHour;
-byte currentHour;
+uint8_t lastHour;
+uint8_t currentHour;
 //
+void presentation()  {
+  // Register all sensors to gw (they will be created as child devices)
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
+  wait(DWELL_TIME);
+  present(CHILD_ID_RAIN_LOG, S_RAIN);
+  wait(DWELL_TIME);
+  present(CHILD_ID_TRIPPED_INDICATOR, S_MOTION);
+  wait(DWELL_TIME);
+
+#ifdef DHT_ON
+  present(CHILD_ID_HUM, S_HUM);
+  wait(DWELL_TIME);
+  present(CHILD_ID_TEMP, S_TEMP);
+  wait(DWELL_TIME);
+#endif
+
+
+#ifdef LUX_ON
+  present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
+#endif
+
+  DEBUG_PRINTLN(F("Sensor Presentation Complete"));
+}
+
 void setup()
 {
-  SERIAL_START(115200);
+  #ifndef MY_DEBUG
+  SERIAL_START(115200);  //Start serial if MySensors debugging isn't enabled
+  #endif
   //
   // Set up the IO
   pinMode(TIP_SENSOR_PIN, INPUT_PULLUP);
@@ -147,7 +174,7 @@ void setup()
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   //
-  //Sync time with the server, this will be called hourly in order to keep time from creeping with the crystal
+  //Sync time with the server
   //
   unsigned long functionTimeout = millis();
   while (timeStatus() == timeNotSet && millis() - functionTimeout < 30000UL)
@@ -165,7 +192,7 @@ void setup()
   bool isDataOnEeprom = false;
   for (int i = 0; i < E_BUFFER_LENGTH; i++)
   {
-    byte locator = loadState(EEPROM_BUFFER_LOCATION + i);
+    uint8_t locator = loadState(EEPROM_BUFFER_LOCATION + i);
     if (locator == 0xFE)  // found the EEPROM circular buffer index
     {
       eepromIndex = EEPROM_BUFFER_LOCATION + i;
@@ -190,8 +217,10 @@ void setup()
       saveState(i, 0x00);
     }
   }
+  #ifdef DEBUG_ON
   dataMillis = millis();
-  lastTipTime = millis() - oneHour; //why is this -oneHour?? Doesn't millis() start at 0 when first powered on?
+  #endif
+  lastTipTime = millis(); 
   //
   request(CHILD_ID_TRIPPED_INDICATOR, V_VAR1);
   wait(DWELL_TIME);
@@ -200,42 +229,15 @@ void setup()
   //
 #ifdef DHT_ON
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN);
-  wait(DWELL_TIME);
   metric = getConfig().isMetric;
+  wait(DWELL_TIME);
 #endif
   //
 #ifdef LUX_ON
-  wait(DWELL_TIME);
   lightSensor.begin();
 #endif
   //
-  DEBUG_PRINTLN(F("Radio Setup Complete!"));
-  transmitRainData();
-}
-
-
-void presentation()  {
-  // Register all sensors to gw (they will be created as child devices)
-  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
-  wait(DWELL_TIME);
-  present(CHILD_ID_RAIN_LOG, S_RAIN);
-  wait(DWELL_TIME);
-  present(CHILD_ID_TRIPPED_INDICATOR, S_MOTION);
-  wait(DWELL_TIME);
-
-#ifdef DHT_ON
-  present(CHILD_ID_HUM, S_HUM);
-  wait(DWELL_TIME);
-  present(CHILD_ID_TEMP, S_TEMP);
-  wait(DWELL_TIME);
-#endif
-
-
-#ifdef LUX_ON
-  present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
-#endif
-
-  DEBUG_PRINTLN(F("Sensor Presentation Complete"));
+  transmitRainData(); //Setup complete send any data loaded from eeprom to gateway
 }
 
 void loop()
@@ -339,7 +341,7 @@ void loop()
     send(msgRainRate.set(rainRate, 1));
     wait(DWELL_TIME);
     DEBUG_PRINTLN(F("Sending rainRate is 0 to controller"));
-    lastHour = currentHour;
+    lastHour = hour();
   }
   if (millis() - sensorPreviousMillis > DHT_LUX_DELAY)
   {
@@ -427,6 +429,7 @@ int rainTotal(int hours)
   return total;
 }
 
+#ifdef DEBUG_ON
 void updateSerialData(int x)
 {
   DEBUG_PRINT(F("Rain last "));
@@ -440,28 +443,29 @@ void updateSerialData(int x)
   tipCount = tipCount / 100;
   DEBUG_PRINTLN(tipCount);
 }
+#endif
 
-void loadRainArray(int value) // retrieve stored rain array from EEPROM on powerup
+void loadRainArray(int eValue) // retrieve stored rain array from EEPROM on powerup
 {
-  for (int i = 0; i < RAIN_BUCKET_SIZE; i++)
+  for (int i = 1; i < RAIN_BUCKET_SIZE; i++)
   {
-    value = value - 2;
-    if (value < EEPROM_BUFFER_LOCATION)
+    eValue = eValue - 2;
+    if (eValue < EEPROM_BUFFER_LOCATION)
     {
-      value = EEPROM_BUFFER_LOCATION + E_BUFFER_LENGTH;
+      eValue = EEPROM_BUFFER_LOCATION + E_BUFFER_LENGTH;
     }
     DEBUG_PRINT(F("EEPROM location: "));
-    DEBUG_PRINTLN(value);
-    byte rainValueHigh = loadState(value);
-    byte rainValueLow = loadState(value + 1);
+    DEBUG_PRINTLN(eValue);
+    uint8_t rainValueHigh = loadState(eValue);
+    uint8_t rainValueLow = loadState(eValue + 1);
     unsigned int rainValue = rainValueHigh << 8;
     rainValue |= rainValueLow;
-    rainBucket[i + 1] = rainValue;
+    rainBucket[i] = rainValue;
     //
     DEBUG_PRINT(F("rainBucket[ value: "));
-    DEBUG_PRINT(i + 1);
+    DEBUG_PRINT(i);
     DEBUG_PRINT(F("] value: "));
-    DEBUG_PRINTLN(rainBucket[i + 1]);
+    DEBUG_PRINTLN(rainBucket[i]);
   }
 }
 
@@ -599,10 +603,10 @@ void slowFlash(void)
   }
 }
 
-void receiveTime(unsigned long time)
+void receiveTime(unsigned long newTime)
 {
   DEBUG_PRINTLN(F("Time received..."));
-  setTime(time);
+  setTime(newTime);
   char theTime[6];
   sprintf(theTime, "%d:%2d", hour(), minute());
   DEBUG_PRINTLN(theTime);
