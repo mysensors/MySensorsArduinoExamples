@@ -48,7 +48,7 @@ Available from the MySensors store - http://www.mysensors.org/store/
 * FTDI USB to TTL Serial Adapter
 * Capacitors (10uf and .1uf)
 * 3.3v voltage regulator
-* Resistors (270 & 10K)
+* Resistors (270, 1K & 10K)
 * Female Dupont Cables
 * 1602 LCD (with I2C Interface)
 * LED
@@ -162,6 +162,7 @@ time_t lastTimeRun = 0;
 const int latchPin = 8;
 const int clockPin = 4;
 const int dataPin  = 7;
+const int outputEnablePin = 6;
 //
 byte clock[8] = {0x0, 0xe, 0x15, 0x17, 0x11, 0xe, 0x0}; // fetching time indicator
 byte raindrop[8] = {0x4, 0x4, 0xA, 0xA, 0x11, 0xE, 0x0,}; // fetching Valve Data indicator
@@ -182,6 +183,8 @@ void setup()
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
   pinMode(ledPin, OUTPUT);
+  pinMode(outputEnablePin, OUTPUT);
+  digitalWrite (outputEnablePin, LOW);
   pinMode(waterButtonPin, INPUT_PULLUP);
   //pinMode(waterButtonPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(waterButtonPin), PushButton, RISING); //May need to change for your Arduino model
