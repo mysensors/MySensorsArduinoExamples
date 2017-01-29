@@ -90,7 +90,7 @@ void loop()
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {
  
     // Fetch and round temperature to one decimal
-    float temperature = static_cast<float>(static_cast<int>((getConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
+    float temperature = static_cast<float>(static_cast<int>((getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
  
     // Only send data if temperature has changed and no error
     #if COMPARE_TEMP == 1
