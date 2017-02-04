@@ -82,7 +82,7 @@ void presentation()
   present(CHILD_ID_HUM, S_HUM);
   present(CHILD_ID_TEMP, S_TEMP);
   
-  metric = getConfig().isMetric;
+  metric = getControllerConfig().isMetric;
 }
 
 

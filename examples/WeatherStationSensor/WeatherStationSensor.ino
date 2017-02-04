@@ -163,7 +163,7 @@ void setup()
 {
 	initPressureSensor();
 	initHumiditySensor();
-	metric = getConfig().isMetric;
+	metric = getControllerConfig().isMetric;
 }
 
 void presentation()
