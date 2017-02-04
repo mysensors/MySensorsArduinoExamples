@@ -92,7 +92,7 @@ void setup()
 		Serial.println("Could not find a valid BMP085 sensor, check wiring!");
 		while (1) {}
 	}
-	metric = getConfig().isMetric;
+	metric = getControllerConfig().isMetric;
 }
 
 void presentation()  {

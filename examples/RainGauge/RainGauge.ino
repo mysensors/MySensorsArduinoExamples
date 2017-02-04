@@ -229,7 +229,7 @@ void setup()
   //
 #ifdef DHT_ON
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN);
-  metric = getConfig().isMetric;
+  metric = getControllerConfig().isMetric;
   wait(DWELL_TIME);
 #endif
   //

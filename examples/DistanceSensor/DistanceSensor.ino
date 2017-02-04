@@ -50,7 +50,7 @@ bool metric = true;
 
 void setup()  
 { 
-  metric = getConfig().isMetric;
+  metric = getControllerConfig().isMetric;
 }
 
 void presentation() {
