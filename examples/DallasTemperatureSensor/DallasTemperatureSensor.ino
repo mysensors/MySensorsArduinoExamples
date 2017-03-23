@@ -136,7 +136,7 @@ void loop()
    if(isCalculating == true && currentMillis - conversionTime > previousMeasurementMillis) {
       isCalculating = false; // We're doing this now, so check calculating off the to-do list too.
       for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++){  // Loop through all the attached temperature sensors.   
-        float temperature = getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i); // Fetch the temperature form the current sensor
+         float temperature = getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i); // Fetch the temperature form the current sensor
          Serial.print("Sensor #");
          Serial.print(i);
          Serial.print(" says it is ");
