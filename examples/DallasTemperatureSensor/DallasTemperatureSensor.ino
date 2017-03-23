@@ -36,14 +36,14 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24                            // A 2.4Ghz transmitter and receiver, often used with MySensors.
-// #define MY_RF24_PA_LEVEL RF24_PA_MIN              // This sets a low-power mode for the radio. Useful if you use the verison with the bigger antenna, but don't want to power that from a separate power source. It can also fix problems with fake Chinese versions of the radio.
-// #define MY_RADIO_RFM69                          // 433Mhz transmitter and reveiver.
+// #define MY_RF24_PA_LEVEL RF24_PA_MIN           // This sets a low-power mode for the radio. Useful if you use the verison with the bigger antenna, but don't want to power that from a separate power source. It can also fix problems with fake Chinese versions of the radio.
+// #define MY_RADIO_RFM69                         // 433Mhz transmitter and reveiver.
 
 // Choose if you want this sensor to also be a repeater.
 // #define MY_REPEATER_FEATURE                    // Just remove the two slashes at the beginning of this line to also enable this sensor to act as a repeater for other sensors. If this node is on battery power, you probably shouldn't enable this.
 
 // Are you using this sensor on battery power?
-// #define BATTERY_POWERED                        // Just remove the two slashes at the beginning of this line if your node is battery powered. It will then go into deep sleep as much as possible. But when it' sleeping it can' work as a repeater.
+// #define BATTERY_POWERED                        // Just remove the two slashes at the beginning of this line if your node is battery powered. It will then go into deep sleep as much as possible. While it's sleeping it can't work as a repeater!
 
 #include <SPI.h>
 #include <MySensors.h>
@@ -55,7 +55,6 @@
 #define COMPARE_TEMP 1                            // Send temperature only if changed? 1 = Yes 0 = No. Can save battery.
 #define ONE_WIRE_BUS 3                            // Pin where Dallas sensor(s) is/are connected.
 #define maxAttachedDS18B20 16                     // Maximum amount of teperature sensors you can connect to this arduino (16).
-// #define FAHRENHEIT                             // Remove the two slashes at the beginning of the line if you want to get the temperature in Fahrenheit.
 unsigned long measurementInterval = 60000;        // Time to wait between reads (in milliseconds).
 float tempThreshold = 0.1;                        // The how big a temperature difference has to be before an update is sent. Makes the sensor less precise, but also less jittery, and can save battery.
 
@@ -65,6 +64,8 @@ DallasTemperature sensors(&oneWire);              // Pass the oneWire reference 
 float lastTemperature[maxAttachedDS18B20];        // creates an array to hold the previous temperature measurements for each possible sensor.
 int numSensors=0;                                 // variable to contain the number of found attached sensors.
 unsigned long measurementSleepTime = 0;           // variable to store the calculated Sleep time if the node is battery powered.
+bool metric = true;                               // Variable that stores if the sensor will output the temperature in Fahrenheit of Celsius. The gateway sends this preference to the node.
+bool receivedConfig = false;                      // This is not used in the code, but perhaps MySensors requires this?
 
 
 // Mysensors settings
@@ -90,15 +91,14 @@ void setup()
 #endif
 
    Serial.begin(115200); // for serial debugging.
-   Serial.print("Hello world, I am a sensor. \n");
+   Serial.print("Hello world, I am a sensor. \n ");
 }
 
 void presentation()
 {
    sendSketchInfo("Temperature Sensor", "1.2");    // Send the sketch version information to the gateway and Controller
    numSensors = sensors.getDeviceCount();          // Fetch the number of attached temperature sensors
-   for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++) 
-   {
+   for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++) {
       present(i, S_TEMP);                          // Present all sensors to controller (16 maximum).
    }
 }
@@ -110,15 +110,14 @@ void loop()
    // You should not change these variables:
    static boolean isMeasuring = true;                        // Used to indicate when the time is right for a new measurement to be made.
    static boolean isCalculating = false;                     // Used to bridge the time that is needed to calculate the temperature values by the Dallas library.
-   static unsigned long currentMillis = 0;                   // The millisecond clock in the main loop.
+   unsigned long currentMillis = 0;                   // The millisecond clock in the main loop.
    static unsigned long previousMeasurementMillis = 0;       // Used to remember the time of the last temperature measurement.
    static int16_t conversionTime = 0;                        // Used to store the time needed to calculate the temperature from measurements.
 
    currentMillis = millis(); // The time since the sensor started, counted in milliseconds. This script tries to avoid using the Sleep function, so that it could at the same time be a MySensors repeater.
 
    // Let's measure the temperature
-   if(isMeasuring == true && currentMillis - previousMeasurementMillis >= measurementInterval) // If we're not calculating, and enough time has passed, we'll start again.
-   { 
+   if(isMeasuring == true && currentMillis - previousMeasurementMillis >= measurementInterval) { // If we're not calculating, and enough time has passed, we'll start again.
       isMeasuring = false; // We're measuring, so let's take it off our to-do list.
       Serial.print("Starting new measurement(s)\n");
       previousMeasurementMillis = currentMillis; // Mark the time of the initialiation of this measurement.
@@ -134,34 +133,21 @@ void loop()
 
 
    // Next, let's calculate and send the temperature
-   if(isCalculating == true && currentMillis > previousMeasurementMillis + conversionTime ) 
-   {
+   if(isCalculating == true && currentMillis - conversionTime > previousMeasurementMillis) {
       isCalculating = false; // We're doing this now, so check calculating off the to-do list too.
-      for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++)  // Loop through all the attached temperature sensors.
-      {   
-         
-#ifdef FAHRENHEIT // Arduino's pre-processor selects which code gets added to the sensor based on which define is set in the settings at the top of this sketch.
-         float temperature = sensors.getTempFByIndex(i);
-#else
-         float temperature = sensors.getTempCByIndex(i);
-#endif
-         
+      for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++){  // Loop through all the attached temperature sensors.   
+        float temperature = getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i); // Fetch the temperature form the current sensor
          Serial.print("Sensor #");
          Serial.print(i);
          Serial.print(" says it is ");
          Serial.print(temperature);
          Serial.print(" degrees\n");
-         if(temperature != -127.00 && temperature != 85.00) // Avoids working with measurement errors.
-         { 
-            //if (COMPARE_TEMP == 1 && lastTemperature[i] == temperature) 
-            if (COMPARE_TEMP == 1 && abs(temperature - lastTemperature[i]) < tempThreshold)
-            {
+         if(temperature != -127.00 && temperature != 85.00) { // Avoids working with measurement errors.
+            if (COMPARE_TEMP == 1 && abs(temperature - lastTemperature[i]) < tempThreshold) { // is the temperature difference bigger than the threshold?
                Serial.print(temperature - lastTemperature[i]);
                Serial.print("- difference too small, so not sending the new measurement to the gateway.\n");
-            } 
-            else 
-            {
-              Serial.print(temperature - lastTemperature[i]);
+            } else {
+               Serial.print(temperature - lastTemperature[i]);
                Serial.print("Sending the new temperature to the gateway.\n");
                send(msg.setSensor(i).set(temperature,1));
                lastTemperature[i] = temperature; // Save new temperatures to be able to compare in the next round.
