@@ -253,6 +253,7 @@ void setup()
     DEBUG_PRINT(F("Calling for Valve "));
     DEBUG_PRINT(i);
     DEBUG_PRINTLN(F(" Data..."));
+    receivedInitialValue = false;
     while (!receivedInitialValue)
     {
       lcd.setCursor(15, 0);
