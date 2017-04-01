@@ -329,6 +329,7 @@ void loop()
         {
           send(msg1valve.setSensor(i).set(false), false);
         }
+        wait(50);
       }
     }
     lastValve = valveNumber;
@@ -364,6 +365,7 @@ void loop()
         for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
         {
           send(msg1valve.setSensor(i).set(false), false);
+          wait(50);
         }
         DEBUG_PRINT(F("State = "));
         DEBUG_PRINTLN(state);
@@ -386,6 +388,7 @@ void loop()
         {
           send(msg1valve.setSensor(i).set(false), false);
         }
+        wait(50);
       }
       DEBUG_PRINTLN(F("State Changed, Single Zone Running..."));
       DEBUG_PRINT(F("Zone: "));
@@ -425,11 +428,14 @@ void loop()
       state = STAND_BY_ALL_OFF;
     }
   }
-  else if (state == ZONE_SELECT_MENU)
+  if (state == ZONE_SELECT_MENU)
   {
     displayMenu();
+  } 
+  else 
+  {
+    lastState = state;
   }
-  lastState = state;
 }
 //
 void displayMenu(void)
@@ -594,9 +600,9 @@ void receive(const MyMessage &message)
         }
         valveNickName[i] = "";
         valveNickName[i] += newMessage;
-        DEBUG_PRINT(F("Recieved new name for zone "));
+        DEBUG_PRINT(F("Recieved variable3 valve: "));
         DEBUG_PRINT(i);
-        DEBUG_PRINT(F(" and it is now called: "));
+        DEBUG_PRINT(F(" = "));
         DEBUG_PRINTLN(valveNickName[i]);
       }
       receivedInitialValue = true;
@@ -615,7 +621,9 @@ void receive(const MyMessage &message)
         DEBUG_PRINT(F(" individual time: "));
         DEBUG_PRINT(valveSoloTime[i]);
         DEBUG_PRINT(F(" group time: "));
-        DEBUG_PRINTLN(allZoneTime[i]);
+        DEBUG_PRINT(allZoneTime[i]);
+        DEBUG_PRINT(F(" name: "));
+        DEBUG_PRINTLN(valveNickName[i]);
         recentUpdate = true;
       }
     }
