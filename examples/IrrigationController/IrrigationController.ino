@@ -151,6 +151,7 @@ bool buttonPushed = false;
 bool showTime = true;
 bool clockUpdating = false;
 bool recentUpdate = true;
+int allVars[] = {V_VAR1, V_VAR2, V_VAR3};
 const char *dayOfWeek[] = {
   "Null", "Sunday ", "Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday ", "Saturday "
 };
@@ -858,32 +859,18 @@ void goGetValveTimes()
     DEBUG_PRINT(F("Calling for Valve "));
     DEBUG_PRINT(valveIndex);
     DEBUG_PRINTLN(F(" Data..."));
-    receivedInitialValue = false;
-    while (!receivedInitialValue)
-    {
-      lcd.setCursor(15, 0);
-      flashIcon = !flashIcon;
-      flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      request(valveIndex, V_VAR1);
-      wait(50);
-    }
-    receivedInitialValue = false;
-    while (!receivedInitialValue)
-    {
-      lcd.setCursor(15, 0);
-      flashIcon = !flashIcon;
-      flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      request(valveIndex, V_VAR2);
-      wait(50);
-    }
-    receivedInitialValue = false;
-    while (!receivedInitialValue)
-    {
-      lcd.setCursor(15, 0);
-      flashIcon = !flashIcon;
-      flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      request(valveIndex, V_VAR3);
-      wait(50);
+    for (int a = 0; a < (sizeof(allVars)/sizeof(int)); a++) {
+      receivedInitialValue = false;
+      byte timeout = 10;
+      while (!receivedInitialValue && timeout > 0)
+      {
+        lcd.setCursor(15, 0);
+        flashIcon = !flashIcon;
+        flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
+        request(valveIndex, allVars[a]);
+        wait(50);
+        timeout--;
+      }
     }
     valveUpdateTime = millis();
     valveIndex++;
