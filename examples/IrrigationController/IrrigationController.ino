@@ -865,7 +865,7 @@ void goGetValveTimes()
       flashIcon = !flashIcon;
       flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
       request(valveIndex, V_VAR1);
-      wait(500);
+      wait(50);
     }
     receivedInitialValue = false;
     while (!receivedInitialValue)
@@ -874,7 +874,7 @@ void goGetValveTimes()
       flashIcon = !flashIcon;
       flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
       request(valveIndex, V_VAR2);
-      wait(500);
+      wait(50);
     }
     receivedInitialValue = false;
     while (!receivedInitialValue)
@@ -883,7 +883,7 @@ void goGetValveTimes()
       flashIcon = !flashIcon;
       flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
       request(valveIndex, V_VAR3);
-      wait(500);
+      wait(50);
     }
     valveUpdateTime = millis();
     valveIndex++;
