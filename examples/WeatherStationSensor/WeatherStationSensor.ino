@@ -233,16 +233,14 @@ void loop() {
     // Now, let's send the measurements to the gateway.
 
     // Send temperature
-    if(temperature != -127.00 && temperature != 85.00) { // Avoids working with measurement errors.
-      if (COMPARE_TEMP == 1 && abs(temperature - lastTemperature) < tempThreshold) { // is the temperature difference bigger than the threshold?
-        Serial.print(temperature - lastTemperature);
-        Serial.print("- BME280 - Temperature difference too small, so not sending the new measurement to the gateway.\n");
-      } else {
-        Serial.print("BME280 - Sending the new temperature to the gateway.\n");
-        send(temperatureMsg.set(temperature, 1));
-        lastTemperature = temperature; // Save new temperatures to be able to compare in the next round.
-      }
-    }    
+    if (COMPARE_TEMP == 1 && abs(temperature - lastTemperature) < tempThreshold) { // is the temperature difference bigger than the threshold?
+      Serial.print(temperature - lastTemperature);
+      Serial.print("- BME280 - Temperature difference too small, so not sending the new measurement to the gateway.\n");
+    } else {
+      Serial.print("BME280 - Sending the new temperature to the gateway.\n");
+      send(temperatureMsg.set(temperature, 1));
+      lastTemperature = temperature; // Save new temperatures to be able to compare in the next round.
+    } 
 
     // Send humidity
     if (COMPARE_TEMP == 1 && abs(humidity - lastHumidity) < humThreshold) { // is the humidity difference bigger than the threshold?
