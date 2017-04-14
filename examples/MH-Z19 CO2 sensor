@@ -22,9 +22,7 @@
  *
  *  MH-Z19 CO2 sensor
  *  
- *  This sensor uses a frickin' laser to measure lots of different fine dust levels, between 0.3 and 10 microns.
- *  
- *  It communicates with your board over serial at 9600 speed.
+ *  This sensor measures Co2 levels. It's pretty good for the price.
  *
  */
 
