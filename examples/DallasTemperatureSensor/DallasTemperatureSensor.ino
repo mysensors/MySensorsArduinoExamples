@@ -1,4 +1,4 @@
-/**
+m/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -23,9 +23,10 @@
  * Example sketch showing how to send in DS1820B OneWire temperature readings back to the controller
  * http://www.mysensors.org/build/temp
  *
- * The cool thing about this temperature sensor (pun intended) is thay you can attach multiple Dallas temperature sensors outputs to the same arduino pin. They will all automatically be recognised as separate sensors.
+ * The cool thing about this temperature sensor (pun intended) is thay you can attach multiple Dallas 
+ * temperature sensors outputs to the same arduino pin. They will all automatically be recognised as 
+ * separate sensors.
  *
- * At the moment of writing (februari 2017) you need older versions of the Dallas and OneWire libraries. Please check the website or forum to see if this is still the case.
  *
  * Modifications by anonymous user so that it can now simultaneously function as a MySensors repeater.
  */
@@ -45,31 +46,35 @@
 // Are you using this sensor on battery power?
 // #define BATTERY_POWERED                        // Just remove the two slashes at the beginning of this line if your node is battery powered. It will then go into deep sleep as much as possible. While it's sleeping it can't work as a repeater!
 
+
+// LIBRARIES (in the Arduino IDE go to Sketch -> Include Library -> Manage Libraries to add these if you don't have them installed yet.)
 #include <SPI.h>
 #include <MySensors.h>
 #include <DallasTemperature.h>
 #include <OneWire.h>
 
 
-// These defines and variables can be changed:
+// VARIABLES YOU CAN CHANGE
 #define COMPARE_TEMP 1                            // Send temperature only if changed? 1 = Yes 0 = No. Can save battery.
-#define ONE_WIRE_BUS 3                            // Pin where Dallas sensor(s) is/are connected.
+#define ONE_WIRE_BUS 3                            // Digital pin where Dallas sensor(s) is/are connected.
 #define maxAttachedDS18B20 16                     // Maximum amount of teperature sensors you can connect to this arduino (16).
 unsigned long measurementInterval = 60000;        // Time to wait between reads (in milliseconds).
-float tempThreshold = 0.1;                        // The how big a temperature difference has to be before an update is sent. Makes the sensor less precise, but also less jittery, and can save battery.
+float tempThreshold = 0.1;                        // How big a temperature difference has to be before an update is sent. Makes the sensor less precise, but also less jittery, and can save battery.
 
-// You should not change these:
+
+//VARIABLES YOU PROBABLY SHOULDN'T CHANGE
+#define TEMP_CHILD_ID 0                           // for MySensors. Within this node each sensortype should have its own ID number.
 OneWire oneWire(ONE_WIRE_BUS);                    // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire);              // Pass the oneWire reference to Dallas Temperature.
 float lastTemperature[maxAttachedDS18B20];        // creates an array to hold the previous temperature measurements for each possible sensor.
-int numSensors=0;                                 // variable to contain the number of found attached sensors.
+int numSensors = 0;                               // variable to contain the number of found attached sensors.
 unsigned long measurementSleepTime = 0;           // variable to store the calculated Sleep time if the node is battery powered.
 bool metric = true;                               // Variable that stores if the sensor will output the temperature in Fahrenheit of Celsius. The gateway sends this preference to the node.
 bool receivedConfig = false;                      // This is not used in the code, but perhaps MySensors requires this?
 
 
 // Mysensors settings
-MyMessage msg(0,V_TEMP);                          // Sets up the message format that we'l be sending to the MySensors gateway later.
+MyMessage msg(TEMP_CHILD_ID,V_TEMP);              // Sets up the message format that we'l be sending to the MySensors gateway later. The first part is the ID of the specific sensor module on this node. The second part tells the gateway what kind of data to expect.
 
 
 void before()
@@ -85,13 +90,13 @@ void setup()
    }
    sensors.setWaitForConversion(false); // requestTemperatures() will not block current thread
 
-#ifdef BATTERY_POWERED // If batterypowered, we'll let Sleep take over the scheduling.
+#ifdef BATTERY_POWERED // If the node is batter ypowered, we'll let Sleep take over the scheduling.
    measurementSleepTime = measurementInterval;
-   measurementInterval = 1; // When the Arduino is asleep, millis doesn't increment anymore (time stops as it were). To fix this, we'll set the measurement interval time to 1, so that when the arduino wakes up it will immediately try to measure again.
+   measurementInterval = 0; // When the Arduino is asleep, millis doesn't increment anymore (time stops as it were). To fix this, we'll set the measurement interval time to 1, so that when the arduino wakes up it will immediately try to measure again.
 #endif
 
    Serial.begin(115200); // for serial debugging.
-   Serial.print("Hello world, I am a sensor. \n ");
+   Serial.println("Hello world, I am a sensor node.");
 }
 
 void presentation()
@@ -99,7 +104,7 @@ void presentation()
    sendSketchInfo("Temperature Sensor", "1.2");    // Send the sketch version information to the gateway and Controller
    numSensors = sensors.getDeviceCount();          // Fetch the number of attached temperature sensors
    for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++) {
-      present(i, S_TEMP);                          // Present all sensors to controller (16 maximum).
+      present(i, S_TEMP);                          // Present all sensors modules to the gateway (16 maximum).
    }
 }
 
@@ -108,18 +113,18 @@ void loop()
 {
 
    // You should not change these variables:
-   static boolean isMeasuring = true;                        // Used to indicate when the time is right for a new measurement to be made.
-   static boolean isCalculating = false;                     // Used to bridge the time that is needed to calculate the temperature values by the Dallas library.
-   unsigned long currentMillis = 0;                   // The millisecond clock in the main loop.
+   static boolean dallasIsMeasuring = true;                        // Used to indicate when the time is right for a new measurement to be made.
+   static boolean dallasIsCalculating = false;                     // Used to bridge the time that is needed to calculate the temperature values by the Dallas library.
+   unsigned long currentMillis = 0;                          // The millisecond clock in the main loop.
    static unsigned long previousMeasurementMillis = 0;       // Used to remember the time of the last temperature measurement.
    static int16_t conversionTime = 0;                        // Used to store the time needed to calculate the temperature from measurements.
 
    currentMillis = millis(); // The time since the sensor started, counted in milliseconds. This script tries to avoid using the Sleep function, so that it could at the same time be a MySensors repeater.
 
    // Let's measure the temperature
-   if(isMeasuring == true && currentMillis - previousMeasurementMillis >= measurementInterval) { // If we're not calculating, and enough time has passed, we'll start again.
-      isMeasuring = false; // We're measuring, so let's take it off our to-do list.
-      Serial.print("Starting new measurement(s)\n");
+   if(dallasIsMeasuring == true && currentMillis - previousMeasurementMillis >= measurementInterval) { // If we're not calculating, and enough time has passed, we'll start again.
+      dallasIsMeasuring = false; // We're measuring, so let's take it off our to-do list.
+      Serial.println("Starting new measurement(s)");
       previousMeasurementMillis = currentMillis; // Mark the time of the initialiation of this measurement.
 
       // Fetch temperatures from Dallas sensors
@@ -128,20 +133,20 @@ void loop()
       // query conversion time. Apparently it takes a while to calculate.
       //ConversionTime = sensors.millisToWaitForConversion(sensors.getResolution());
       conversionTime = millisToWaitForConversion(sensors.getResolution()); // This is a modified version of the line above, to deal with the problem in the current Dallas library.
-      isCalculating = true; //Next step is to re-calculate the temperature again.
+      dallasIsCalculating = true; //Next step is to re-calculate the temperature again.
    }
 
 
    // Next, let's calculate and send the temperature
-   if(isCalculating == true && currentMillis - conversionTime > previousMeasurementMillis) {
-      isCalculating = false; // We're doing this now, so check calculating off the to-do list too.
+   if(dallasIsCalculating == true && currentMillis - conversionTime > previousMeasurementMillis) {
+      dallasIsCalculating = false; // We're doing this now, so check calculating off the to-do list too.
       for (int i=0; i<numSensors && i<maxAttachedDS18B20; i++){  // Loop through all the attached temperature sensors.   
-         float temperature = getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i); // Fetch the temperature form the current sensor
+        float temperature = getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i); // Fetch the temperature form the current sensor
          Serial.print("Sensor #");
          Serial.print(i);
          Serial.print(" says it is ");
          Serial.print(temperature);
-         Serial.print(" degrees\n");
+         Serial.println(" degrees");
          if(temperature != -127.00 && temperature != 85.00) { // Avoids working with measurement errors.
             if (COMPARE_TEMP == 1 && abs(temperature - lastTemperature[i]) < tempThreshold) { // is the temperature difference bigger than the threshold?
                Serial.print(temperature - lastTemperature[i]);
@@ -164,7 +169,7 @@ void loop()
       sleep (sleeptime);
 #endif
 
-      isMeasuring = true;
+      dallasIsMeasuring = true;
    }
 }
 
