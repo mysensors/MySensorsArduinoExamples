@@ -60,9 +60,6 @@
 // Choose if you want this sensor to also be a repeater.
 // #define MY_REPEATER_FEATURE                      // Just remove the two slashes at the beginning of this line to also enable this sensor to act as a repeater for other sensors. If this node is on battery power, you probably shouldn't enable this.
 
-// Are you using this sensor on battery power?
-// #define BATTERY_POWERED                          // Just remove the two slashes at the beginning of this line if your node is battery powered. It will then go into deep sleep as much as possible. While it's sleeping it can't work as a repeater!
-
 #include <SPI.h>
 #include <MySensors.h>
 #include <SoftwareSerial.h>
@@ -79,7 +76,6 @@ MyMessage msgDust25(CHILD_ID_DUST_PM25, V_LEVEL);   // Sets up the message forma
 MyMessage msgDust25b(CHILD_ID_DUST_PM25, V_UNIT_PREFIX);
 MyMessage msgDust100(CHILD_ID_DUST_PM100, V_LEVEL); // Sets up the message format that we'l be sending to the MySensors gateway later.
 MyMessage msgDust100b(CHILD_ID_DUST_PM100, V_UNIT_PREFIX);
-
 
 
 // These defines and variables can be changed:
@@ -110,7 +106,6 @@ uint16_t checksum;
 int dustSlowDownCounter = 0;
 
 
-
 void presentation()
 {
   // Send the sketch version information to the gateway and Controller
@@ -126,7 +121,8 @@ void presentation()
 }
 
 
-void setup() {
+void setup() 
+{
   Serial.begin(115200);
   delay(1000);
   mySerial.begin(9600);
@@ -135,7 +131,8 @@ void setup() {
 }
 
 
-void loop() {
+void loop() 
+{
 
   // The dust sensor sends its data continuously, so let's  catch that data.
   int dustSensorOutput = pms7003ReadData();
@@ -291,10 +288,10 @@ int pms7003ReadData() {
 
   // Time to send the results to the gateway.
   dustSlowDownCounter = dustSlowDownCounter + 1;
-  if(dustSlowDownCounter > dustSlowDown){
+  if(dustSlowDownCounter > dustSlowDown) {
     
     /*  MEASUREMENT  */
-    if(rawGt1_0um > 0){
+    if(rawGt1_0um > 0) {
       Serial.println(" Dust1_0 = " + String(concPM1_0_CF1));
       send(msgDust10.set(concPM1_0_CF1,1));
     }         
@@ -309,27 +306,27 @@ int pms7003ReadData() {
 
     /*  RAW DATA  */            
     /*
-    if(rawGt0_3um > 0){
+    if(rawGt0_3um > 0) {
       Serial.println(" Dust03 = " + String(rawGt0_3um));
       send(msgDust03.set(rawGt0_3um,1));
     }
-    if(rawGt0_5um > 0){
+    if(rawGt0_5um > 0) {
       Serial.println(" Dust05 = " + String(rawGt0_5um));
       send(msgDust05.set(rawGt0_5um,1));
     }
-    if(rawGt1_0um > 0){
+    if(rawGt1_0um > 0) {
       Serial.println(" Dust10 = " + String(rawGt1_0um));
       send(msgDust10.set(rawGt1_0um,1));
     }
-    if(rawGt2_5um > 0){
+    if(rawGt2_5um > 0) {
       Serial.println(" Dust25 = " + String(rawGt2_5um));
       send(msgDust25.set(rawGt2_5um,1));
     }
-    if(rawGt5_0um > 0){
+    if(rawGt5_0um > 0) {
       Serial.println(" Dust50 = " + String(rawGt5_0um));
       send(msgDust50.set(rawGt5_0um,1));
     }      
-    if(rawGt10_0um > 0){
+    if(rawGt10_0um > 0) {
       Serial.println(" Dust100 = " + String(rawGt10_0um));
       send(msgDust100.set(rawGt10_0um,1));
     }   
