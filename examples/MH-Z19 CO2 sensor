@@ -1,0 +1,151 @@
+/*
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ *  DESCRIPTION
+ *
+ *  MH-Z19 CO2 sensor
+ *  
+ *  This sensor uses a frickin' laser to measure lots of different fine dust levels, between 0.3 and 10 microns.
+ *  
+ *  It communicates with your board over serial at 9600 speed.
+ *
+ */
+
+
+//------------------------------------------------------------------------------
+
+// if you uncomment this, you can get test and debug updates about the sensor' wireless connection by using the serial monitor tool.
+#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24                            // A 2.4Ghz transmitter and receiver, often used with MySensors.
+// #define MY_RF24_PA_LEVEL RF24_PA_MIN           // This sets a low-power mode for the radio. Useful if you use the verison with the bigger antenna, but don't want to power that from a separate power source. It can also fix problems with fake Chinese versions of the radio.
+// #define MY_RADIO_RFM69                         // 433Mhz transmitter and reveiver.
+
+// Choose if you want this sensor to also be a repeater.
+// #define MY_REPEATER_FEATURE                    // Just remove the two slashes at the beginning of this line to also enable this sensor to act as a repeater for other sensors. If this node is on battery power, you probably shouldn't enable this.
+
+
+// Libraries
+#include <MySensors.h>
+#include <SoftwareSerial.h>
+
+
+// Feel free to change this:
+unsigned long co2MeasurementInterval = 30000;     // Time to wait between reads (in milliseconds).
+SoftwareSerial mySerial(10, 11);                  // RX, TX . You can choose other pins if you prefer.
+
+
+// Mysensors settings
+#define CHILD_ID_CO2 0                            // The Co2 sensor' ID on this node.
+MyMessage msgCo2(CHILD_ID_CO2, V_LEVEL);
+MyMessage msgCo2b(CHILD_ID_CO2, V_UNIT_PREFIX);
+
+
+void presentation()
+{
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("AIQ Sensor CO2 MH-Z19", "1.1");
+
+  // Register attached sensor(s) to gateway
+  present(CHILD_ID_CO2, S_AIR_QUALITY);
+  send(msgCo2b.set("ppm"));
+}
+
+
+void setup() 
+{
+  delay(1000);
+  Serial.begin(115200);
+  delay(1000);
+
+  mySerial.begin(9600);
+  delay(2000);
+  while (mySerial.read()!=-1) {};  //clear Co2 buffer.
+  Serial.println("hello world, I am a sensor.");
+}
+
+
+void loop() 
+{
+  // You should not change these variables:
+  static unsigned long previousCo2Millis = 0; // Used to remember the time of the last temperature measurement.
+  unsigned long currentMillis = millis(); // The time since the sensor started, counted in milliseconds. This script tries to avoid using the Sleep function, so that it could at the same time be a MySensors repeater.
+
+  if (currentMillis - previousCo2Millis >= co2MeasurementInterval) { // this only gets triggered when enough time has passed.
+    Serial.println("CO2 - Sending data request to sensor.");
+    previousCo2Millis = currentMillis;
+    long co2ppm = readCO2(); // This is there the function gets called that talks to the Co2 sensor.
+    Serial.println("Co2 - PPM = " + String(co2ppm));
+    send(msgCo2.set((long)ceil(co2ppm))); 
+    Serial.print("Co2 - zzzzZZZZzzzzZZZZzzzz\n");
+  }
+}
+
+
+// Main function that gets the Co2 data
+int readCO2()
+{
+  while (mySerial.read()!=-1) {};  //clear serial buffer  
+
+  char response[9]; // for answer
+  byte cmd[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
+  
+  // Command to ask for data.
+  mySerial.write(cmd, 9); //request PPM CO2 
+
+  // Then for 1 second listen for 9 bytes of data.
+  mySerial.readBytes(response, 9);
+
+  Serial.print(response[0], HEX);   
+  Serial.print(" - ");   
+  Serial.print(response[1], HEX);   
+  Serial.print(" - ");    
+  Serial.print(response[2], HEX);   
+  Serial.print(" - ");          
+  Serial.print(response[3], HEX);   
+  Serial.print(" - ");          
+  Serial.print(response[4], HEX);   
+  Serial.print(" - ");          
+  Serial.print(response[5], HEX);   
+  Serial.print(" - ");        
+  Serial.print(response[6], HEX);   
+  Serial.print(" - ");   
+  Serial.print(response[7], HEX);   
+  Serial.print(" - ");      
+  Serial.print(response[8], HEX); 
+  Serial.println(" - END");  
+
+  if (response[0] != 0xFF) {
+    Serial.println("Wrong starting byte from co2 sensor! (should be FF)");
+    return -1;
+  }
+
+  if (response[1] != 0x86) {
+    Serial.println("Wrong command from co2 sensor! (should be 86)");
+    return -1;
+  }
+
+  int responseHigh = (int) response[2];
+  int responseLow = (int) response[3];
+  int ppm = (256 * responseHigh) + responseLow;
+  
+  return ppm;
+}
