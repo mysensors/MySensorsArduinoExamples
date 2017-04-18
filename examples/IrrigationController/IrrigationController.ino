@@ -100,9 +100,11 @@ Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (p
 
 #define NUMBER_OF_VALVES 8  // Change this to set your valve count up to 16.
 #define VALVE_RESET_TIME 7500UL   // Change this (in milliseconds) for the time you need your valves to hydraulically reset and change state
+#define VALVE_TIMES_RELOAD 300000UL  // Change this (in milliseconds) for how often to update all valves data from the controller (Loops at value/number valves)
+                                     // ie: 300000 for 8 valves produces requests 37.5seconds with all valves updated every 5mins 
 
 #define SKETCH_NAME "MySprinkler"
-#define SKETCH_VERSION "2.0"
+#define SKETCH_VERSION "2.2"
 //
 #define CHILD_ID_SPRINKLER 0
 //
@@ -149,6 +151,7 @@ bool buttonPushed = false;
 bool showTime = true;
 bool clockUpdating = false;
 bool recentUpdate = true;
+int allVars[] = {V_VAR1, V_VAR2, V_VAR3};
 const char *dayOfWeek[] = {
   "Null", "Sunday ", "Monday ", "Tuesday ", "Wednesday ", "Thursday ", "Friday ", "Saturday "
 };
@@ -175,6 +178,7 @@ MyMessage var1valve(CHILD_ID_SPRINKLER, V_VAR1);
 MyMessage var2valve(CHILD_ID_SPRINKLER, V_VAR2);
 
 bool receivedInitialValue = false;
+bool inSetup = true;
 //
 void setup()
 {
@@ -241,45 +245,11 @@ void setup()
     }
   }
   //
-  lcd.clear();
-  //Update valve data when first powered on
-  for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
+  //Update valve data when first powered on 
+  for (byte i = 1; i <= NUMBER_OF_VALVES; i++)
   {
-    lcd.print(F(" Updating  "));
-    lcd.setCursor(0, 1);
-    lcd.print(F(" Valve Data: "));
-    lcd.print(i);
-    bool flashIcon = false;
-    DEBUG_PRINT(F("Calling for Valve "));
-    DEBUG_PRINT(i);
-    DEBUG_PRINTLN(F(" Data..."));
-    receivedInitialValue = false;
-    while (!receivedInitialValue)
-    {
-      lcd.setCursor(15, 0);
-      flashIcon = !flashIcon;
-      flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      request(i, V_VAR1);
-      wait(500);
-    }
-    receivedInitialValue = false;
-    while (!receivedInitialValue)
-    {
-      lcd.setCursor(15, 0);
-      flashIcon = !flashIcon;
-      flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      request(i, V_VAR2);
-      wait(500);
-    }
-    receivedInitialValue = false;
-    while (!receivedInitialValue)
-    {
-      lcd.setCursor(15, 0);
-      flashIcon = !flashIcon;
-      flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      request(i, V_VAR3);
-      wait(500);
-    }
+    lcd.clear();
+    goGetValveTimes();
   }
   lcd.clear();
 }
@@ -360,6 +330,7 @@ void loop()
         {
           send(msg1valve.setSensor(i).set(false), false);
         }
+        wait(50);
       }
     }
     lastValve = valveNumber;
@@ -395,6 +366,7 @@ void loop()
         for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
         {
           send(msg1valve.setSensor(i).set(false), false);
+          wait(50);
         }
         DEBUG_PRINT(F("State = "));
         DEBUG_PRINTLN(state);
@@ -417,6 +389,7 @@ void loop()
         {
           send(msg1valve.setSensor(i).set(false), false);
         }
+        wait(50);
       }
       DEBUG_PRINTLN(F("State Changed, Single Zone Running..."));
       DEBUG_PRINT(F("Zone: "));
@@ -456,11 +429,14 @@ void loop()
       state = STAND_BY_ALL_OFF;
     }
   }
-  else if (state == ZONE_SELECT_MENU)
+  if (state == ZONE_SELECT_MENU)
   {
     displayMenu();
+  } 
+  else 
+  {
+    lastState = state;
   }
-  lastState = state;
 }
 //
 void displayMenu(void)
@@ -625,9 +601,9 @@ void receive(const MyMessage &message)
         }
         valveNickName[i] = "";
         valveNickName[i] += newMessage;
-        DEBUG_PRINT(F("Recieved new name for zone "));
+        DEBUG_PRINT(F("Recieved variable3 valve: "));
         DEBUG_PRINT(i);
-        DEBUG_PRINT(F(" and it is now called: "));
+        DEBUG_PRINT(F(" = "));
         DEBUG_PRINTLN(valveNickName[i]);
       }
       receivedInitialValue = true;
@@ -646,7 +622,9 @@ void receive(const MyMessage &message)
         DEBUG_PRINT(F(" individual time: "));
         DEBUG_PRINT(valveSoloTime[i]);
         DEBUG_PRINT(F(" group time: "));
-        DEBUG_PRINTLN(allZoneTime[i]);
+        DEBUG_PRINT(allZoneTime[i]);
+        DEBUG_PRINT(F(" name: "));
+        DEBUG_PRINTLN(valveNickName[i]);
         recentUpdate = true;
       }
     }
@@ -869,17 +847,34 @@ void goGetValveTimes()
 {
   static unsigned long valveUpdateTime;
   static byte valveIndex = 1;
-  if (millis() - valveUpdateTime >= 300000UL / NUMBER_OF_VALVES)// update each valve once every 5 mins (distributes the traffic)
+  if (inSetup || millis() - valveUpdateTime >= VALVE_TIMES_RELOAD / NUMBER_OF_VALVES) // update each valve once every 5 mins (distributes the traffic)
   {
-    DEBUG_PRINTLN(F("Calling for Valve Data..."));
-    lcd.setCursor(15, 0);
-    lcd.write(byte(1)); //lcd.write(1);
-    request(valveIndex, V_VAR1);
-    request(valveIndex, V_VAR2);
-    request(valveIndex, V_VAR3);
+    if (inSetup) {
+      lcd.print(F(" Updating  "));
+      lcd.setCursor(0, 1);
+      lcd.print(F(" Valve Data: "));
+      lcd.print(valveIndex);
+    }
+    bool flashIcon = false;
+    DEBUG_PRINT(F("Calling for Valve "));
+    DEBUG_PRINT(valveIndex);
+    DEBUG_PRINTLN(F(" Data..."));
+    for (int a = 0; a < (sizeof(allVars)/sizeof(int)); a++) {
+      receivedInitialValue = false;
+      byte timeout = 10;
+      while (!receivedInitialValue && timeout > 0)
+      {
+        lcd.setCursor(15, 0);
+        flashIcon = !flashIcon;
+        flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
+        request(valveIndex, allVars[a]);
+        wait(50);
+        timeout--;
+      }
+    }
     valveUpdateTime = millis();
     valveIndex++;
-    if (valveIndex > NUMBER_OF_VALVES + 1)
+    if (valveIndex > NUMBER_OF_VALVES)
     {
       valveIndex = 1;
     }
