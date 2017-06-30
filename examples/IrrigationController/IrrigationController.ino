@@ -252,6 +252,7 @@ void setup()
     goGetValveTimes();
   }
   lcd.clear();
+  inSetup = false;
 }
 
 
