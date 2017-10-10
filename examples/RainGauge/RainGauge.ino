@@ -1,9 +1,9 @@
 /*
  Arduino Tipping Bucket Rain Gauge
 
- April 26, 2015
+ October 6, 2017
 
- Version 2.0
+ Version 2.1
 
  Arduino Tipping Bucket Rain Gauge
 
@@ -33,7 +33,9 @@
    a cumulative total rainfall (day4 = day1+day2+day3+day4 etc)
 
  by @BulldogLowell and @PeteWill for free public use
-
+ 
+ Change Log
+ 2017-10-06 - Version 2.1 - Updated variable types to optimize bytes used and fixed rainBucket array size issue
  */
 
 //#define MY_DEBUG // Enable MySensors debug prints to serial monitor
@@ -41,6 +43,8 @@
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+
+#define MY_RF24_PA_LEVEL RF24_PA_MAX //Options: RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
 
 //#define MY_NODE_ID 7 //uncomment this line to assign a static ID
 
@@ -65,8 +69,8 @@
 #define CHILD_ID_RAIN_LOG 3  // Keeps track of accumulated rainfall
 #define CHILD_ID_TRIPPED_INDICATOR 4  // Indicates Tripped when rain detected
 #define EEPROM_BUFFER_LOCATION 0  // location of the EEPROM circular buffer
-#define E_BUFFER_LENGTH 240
-#define RAIN_BUCKET_SIZE 120
+#define E_BUFFER_LENGTH 240 //Max size = 254
+#define RAIN_BUCKET_SIZE 120 //Max size = 254
 
 #ifdef  DEBUG_ON
   #define DEBUG_PRINT(x)   Serial.print(x)
@@ -111,13 +115,13 @@ MyMessage msgTrippedVar2(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
   #define CHILD_ID_LIGHT 2
   BH1750 lightSensor;
   MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL);
-  unsigned int lastlux;
+  uint16_t lastlux;
   uint8_t heartbeat = 10; //Used to send the light lux to gateway as soon as the device is restarted and after the DHT_LUX_DELAY has happened 10 times
 #endif
 unsigned long sensorPreviousMillis;
-int eepromIndex;
-int tipSensorPin = 3; // Pin the tipping bucket is connected to. Must be interrupt capable pin
-int ledPin = 5; // Pin the LED is connected to.  PWM capable pin required
+uint8_t eepromIndex;
+uint8_t tipSensorPin = 3; // Pin the tipping bucket is connected to. Must be interrupt capable pin
+uint8_t ledPin = 5; // Pin the LED is connected to.  PWM capable pin required
 #ifdef DEBUG_ON
 unsigned long dataMillis;
 unsigned long serialInterval = 600000UL;
@@ -125,15 +129,15 @@ unsigned long serialInterval = 600000UL;
 const unsigned long oneHour = 3600000UL;
 unsigned long lastTipTime;
 unsigned long lastRainTime; //Used for rainRate calculation
-unsigned int rainBucket [RAIN_BUCKET_SIZE] ; /* 24 hours x 5 Days = 120 hours */
-unsigned int rainRate = 0;
+uint16_t rainBucket [RAIN_BUCKET_SIZE + 1]; /* 24 hours x 5 Days = 120 hours */
+uint16_t rainRate = 0;
 uint8_t rainWindow = 72;         //default rain window in hours.  Will be overwritten with msgTrippedVar1.
 volatile int wasTippedBuffer = 0;
-int rainSensorThreshold = 50; //default rain sensor sensitivity in hundredths.  Will be overwritten with msgTrippedVar2.
+uint16_t rainSensorThreshold = 50; //default rain sensor sensitivity in hundredths.  Will be overwritten with msgTrippedVar2.
 uint8_t state = 0;
 uint8_t oldState = 2; //Setting the default to something other than 1 or 0
-unsigned int lastRainRate = 0;
-int lastMeasure = 0;
+uint16_t lastRainRate = 0;
+uint16_t lastMeasure = 0;
 bool gotTime = false;
 uint8_t lastHour;
 uint8_t currentHour;
@@ -190,7 +194,7 @@ void setup()
   //retrieve from EEPROM stored values on a power cycle.
   //
   bool isDataOnEeprom = false;
-  for (int i = 0; i < E_BUFFER_LENGTH; i++)
+  for (uint8_t i = 0; i < E_BUFFER_LENGTH; i++)
   {
     uint8_t locator = loadState(EEPROM_BUFFER_LOCATION + i);
     if (locator == 0xFE)  // found the EEPROM circular buffer index
@@ -212,7 +216,7 @@ void setup()
     saveState(eepromIndex, 0xFE);
     saveState(eepromIndex + 1, 0xFE);
     //then I will clear out any bad data
-    for (int i = 2; i <= E_BUFFER_LENGTH; i++)
+    for (uint8_t i = 2; i <= E_BUFFER_LENGTH; i++)
     {
       saveState(i, 0x00);
     }
@@ -229,7 +233,7 @@ void setup()
   //
 #ifdef DHT_ON
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN);
-  metric = getControllerConfig().isMetric;
+  metric = getControllerConfig().isMetric;  
   wait(DWELL_TIME);
 #endif
   //
@@ -263,8 +267,8 @@ void loop()
   //
   // let's constantly check to see if the rain in the past rainWindow hours is greater than rainSensorThreshold
   //
-  int measure = 0; // Check to see if we need to show sensor tripped in this block
-  for (int i = 0; i < rainWindow; i++)
+  uint16_t measure = 0; // Check to see if we need to show sensor tripped in this block
+  for (uint8_t i = 0; i < rainWindow; i++)
   {
     measure += rainBucket [i];
     if (measure != lastMeasure)
@@ -316,7 +320,7 @@ void loop()
     saveState(eepromIndex + 1, lowByte(rainBucket[0]));
     DEBUG_PRINT(F("Saving rainBucket[0] to eeprom. rainBucket[0] = "));
     DEBUG_PRINTLN(rainBucket[0]);
-    for (int i = RAIN_BUCKET_SIZE - 1; i >= 0; i--)//cascade an hour of values back into the array
+    for (int16_t i = RAIN_BUCKET_SIZE - 1; i >= 0; i--)//cascade an hour of values back into the array
     {
       rainBucket [i + 1] = rainBucket [i];
     }
@@ -392,7 +396,7 @@ void doDHT(void)
 #ifdef LUX_ON
 void doLUX(void)
 {
-  unsigned int lux = lightSensor.readLightLevel();// Get Lux value
+  uint16_t lux = lightSensor.readLightLevel();// Get Lux value
   DEBUG_PRINT(F("Current LUX Level: "));
   DEBUG_PRINTLN(lux);
   heartbeat++;
@@ -419,10 +423,10 @@ void sensorTipped()
   lastTipTime = thisTipTime;
 }
 //
-int rainTotal(int hours)
+uint32_t rainTotal(uint8_t hours)
 {
-  int total = 0;
-  for ( int i = 0; i <= hours; i++)
+  uint32_t total = 0;
+  for (uint8_t i = 0; i <= hours; i++)
   {
     total += rainBucket [i];
   }
@@ -436,7 +440,7 @@ void updateSerialData(int x)
   DEBUG_PRINT(x);
   DEBUG_PRINTLN(F(" hours: "));
   float tipCount = 0;
-  for (int i = 0; i < x; i++)
+  for (uint8_t i = 0; i < x; i++)
   {
     tipCount = tipCount + rainBucket [i];
   }
@@ -445,9 +449,9 @@ void updateSerialData(int x)
 }
 #endif
 
-void loadRainArray(int eValue) // retrieve stored rain array from EEPROM on powerup
+void loadRainArray(int16_t eValue) // retrieve stored rain array from EEPROM on powerup
 {
-  for (int i = 1; i < RAIN_BUCKET_SIZE; i++)
+  for (uint8_t i = 1; i < RAIN_BUCKET_SIZE; i++)
   {
     eValue = eValue - 2;
     if (eValue < EEPROM_BUFFER_LOCATION)
@@ -458,7 +462,7 @@ void loadRainArray(int eValue) // retrieve stored rain array from EEPROM on powe
     DEBUG_PRINTLN(eValue);
     uint8_t rainValueHigh = loadState(eValue);
     uint8_t rainValueLow = loadState(eValue + 1);
-    unsigned int rainValue = rainValueHigh << 8;
+    uint16_t rainValue = rainValueHigh << 8;
     rainValue |= rainValueLow;
     rainBucket[i] = rainValue;
     //
@@ -474,7 +478,7 @@ void transmitRainData(void)
   DEBUG_PRINT(F("In transmitRainData. currentHour = "));
   DEBUG_PRINTLN(currentHour);
   int rainUpdateTotal = 0;
-  for (int i = currentHour; i >= 0; i--)
+  for (int8_t i = currentHour; i >= 0; i--)
   {
     rainUpdateTotal += rainBucket[i];
     DEBUG_PRINT(F("Adding rainBucket["));
@@ -488,7 +492,7 @@ void transmitRainData(void)
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
-  for (int i = currentHour + 24; i > currentHour; i--)
+  for (uint8_t i = currentHour + 24; i > currentHour; i--)
   {
     rainUpdateTotal += rainBucket[i];
     DEBUG_PRINT(F("Adding rainBucket["));
@@ -502,7 +506,7 @@ void transmitRainData(void)
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
-  for (int i = currentHour + 48; i > currentHour + 24; i--)
+  for (uint8_t i = currentHour + 48; i > currentHour + 24; i--)
   {
     rainUpdateTotal += rainBucket[i];
     DEBUG_PRINT(F("Adding rainBucket["));
@@ -516,7 +520,7 @@ void transmitRainData(void)
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
-  for (int i = currentHour + 72; i > currentHour + 48; i--)
+  for (uint8_t i = currentHour + 72; i > currentHour + 48; i--)
   {
     rainUpdateTotal += rainBucket[i];
     DEBUG_PRINT(F("Adding rainBucket["));
@@ -530,7 +534,7 @@ void transmitRainData(void)
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
-  for (int i = currentHour + 96; i > currentHour + 72; i--)
+  for (uint8_t i = currentHour + 96; i > currentHour + 72; i--)
   {
     rainUpdateTotal += rainBucket[i];
     DEBUG_PRINT(F("Adding rainBucket["));
