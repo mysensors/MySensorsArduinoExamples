@@ -44,7 +44,7 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#define MY_RF24_PA_LEVEL RF24_PA_MAX //Options: RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
+//#define MY_RF24_PA_LEVEL RF24_PA_MAX //Options: RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
 
 //#define MY_NODE_ID 7 //uncomment this line to assign a static ID
 
@@ -53,7 +53,7 @@
 #include <MySensors.h>
 
 #define SKETCH_NAME "Rain Gauge"
-#define SKETCH_VERSION "2.0"
+#define SKETCH_VERSION "2.1"
 
 #define DWELL_TIME 40  // this allows for radio to come back to power after a transmission, ideally 0 
 
