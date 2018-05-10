@@ -46,7 +46,8 @@
 // Set this to the pin you connected the DHT's data pin to
 #define DHT_DATA_PIN 3
 
-// Set this offset if the sensor has a permanent small offset to the real temperatures
+// Set this offset if the sensor has a permanent small offset to the real temperatures.
+// In Celsius degrees (as measured by the device)
 #define SENSOR_TEMP_OFFSET 0
 
 // Sleep time between sensor updates (in milliseconds)
@@ -110,12 +111,15 @@ void loop()
   } else if (temperature != lastTemp || nNoUpdatesTemp == FORCE_UPDATE_N_READS) {
     // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
     lastTemp = temperature;
+
+    // apply the offset before converting to something different than Celsius degrees
+    temperature += SENSOR_TEMP_OFFSET;
+
     if (!metric) {
       temperature = dht.toFahrenheit(temperature);
     }
     // Reset no updates counter
     nNoUpdatesTemp = 0;
-    temperature += SENSOR_TEMP_OFFSET;
     send(msgTemp.set(temperature, 1));
 
     #ifdef MY_DEBUG
