@@ -34,7 +34,7 @@
  *   ADDR >>> NC or GND  
  *   SCL  >>> A5
  *   SDA  >>> A4
- * http://www.mysensors.org/build/light
+ * https://www.mysensors.org/build/light-bh1750
  */
 
 
