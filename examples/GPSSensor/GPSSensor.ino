@@ -49,7 +49,6 @@ static const uint32_t GPSBaud = 9600;
 // Offset hours adjustment from gps time (UTC)
 const int offset = 1;
 
-#include <SPI.h>
 #include <TimeLib.h>
 #include <MySensors.h>
 #include <TinyGPS++.h>

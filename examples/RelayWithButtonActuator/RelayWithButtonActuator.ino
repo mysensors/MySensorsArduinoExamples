@@ -39,7 +39,6 @@
 // Enabled repeater feature for this node
 #define MY_REPEATER_FEATURE
 
-#include <SPI.h>
 #include <MySensors.h>
 #include <Bounce2.h>
 
@@ -118,4 +117,3 @@ void receive(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
-

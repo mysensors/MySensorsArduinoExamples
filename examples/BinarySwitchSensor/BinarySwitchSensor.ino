@@ -34,7 +34,6 @@
 #define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>
 #include <Bounce2.h>
 
@@ -81,4 +80,3 @@ void loop()
      oldValue = value;
   }
 } 
-

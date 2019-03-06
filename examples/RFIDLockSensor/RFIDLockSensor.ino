@@ -50,7 +50,6 @@
 #define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>  
 #include <Wire.h>
 #include <PN532_I2C.h>
@@ -180,5 +179,3 @@ void receive(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
-
-

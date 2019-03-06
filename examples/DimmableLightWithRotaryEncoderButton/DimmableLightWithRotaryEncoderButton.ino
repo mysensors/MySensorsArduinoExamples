@@ -48,7 +48,6 @@
 #define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>  
 #include <Bounce2.h>
 #include <Encoder.h>
@@ -234,7 +233,3 @@ int loadLevelState(byte pos) {
 void saveLevelState(byte pos, byte data) {
   saveState(pos,min(max(data,0),100));
 }
-
-
-
-
