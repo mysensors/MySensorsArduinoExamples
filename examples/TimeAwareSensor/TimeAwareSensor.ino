@@ -29,7 +29,7 @@
 #define MY_DEBUG 
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_NR24
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
@@ -51,10 +51,11 @@ void presentation()  {
 }
 
 // This is called when a new time value was received
-void receiveTime(unsigned long time) {
+void receiveTime(uint32_t time) {
   // Ok, set incoming time 
   setTime(time);
   timeReceived = true;
+  Serial.println("Time received");
 }
  
 void loop()     
@@ -62,9 +63,10 @@ void loop()
   unsigned long now = millis();
 
   // If no time has been received yet, request it every 10 second from controller
-  // When time has been received, request update every hour
+  // When time has been received, request update every 20 seconds 
+  // (use a more reasonable time like 60 minutes for a release)
   if ((!timeReceived && (now-lastRequest) > (10UL*1000UL))
-    || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
+    || (timeReceived && (now-lastRequest) > (20UL*1000UL*60UL))) {
     // Request time from controller. 
     Serial.println("requesting time");
     requestTime();  
