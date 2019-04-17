@@ -243,7 +243,7 @@ void loop() {
     } 
 
     // Send humidity
-    if (COMPARE_TEMP == 1 && abs(humidity - lastHumidity) < humThreshold) { // is the humidity difference bigger than the threshold?
+    if (COMPARE_HUM == 1 && abs(humidity - lastHumidity) < humThreshold) { // is the humidity difference bigger than the threshold?
       Serial.print(humidity - lastHumidity);
       Serial.println("- BME280 - Humidity difference too small, so not sending the new measurement to the gateway.");
     } else {
@@ -253,7 +253,7 @@ void loop() {
     }
 
     // Send pressure
-    if (COMPARE_TEMP == 1 && abs(pressure - lastPressure) < presThreshold) { // is the pressure difference bigger than the threshold?
+    if (COMPARE_BARO == 1 && abs(pressure - lastPressure) < presThreshold) { // is the pressure difference bigger than the threshold?
       Serial.print(pressure - lastPressure);
       Serial.println("- BME280 - Pressure difference too small, so not sending the new measurement to the gateway.");
     } else {
