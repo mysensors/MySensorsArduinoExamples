@@ -47,10 +47,9 @@
 #define MY_DEBUG 
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>  
 #include <Wire.h>
 #include <PN532_I2C.h>
@@ -180,5 +179,3 @@ void receive(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
-
-

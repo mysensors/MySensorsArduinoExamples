@@ -31,7 +31,7 @@
 #define MY_DEBUG
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
 // GPS position send interval (in millisectonds)
@@ -49,7 +49,6 @@ static const uint32_t GPSBaud = 9600;
 // Offset hours adjustment from gps time (UTC)
 const int offset = 1;
 
-#include <SPI.h>
 #include <TimeLib.h>
 #include <MySensors.h>
 #include <TinyGPS++.h>

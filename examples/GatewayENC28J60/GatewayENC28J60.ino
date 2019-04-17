@@ -45,7 +45,7 @@
 #define MY_DEBUG 
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
 // When ENC28J60 is connected we have to move CE/CSN pins for NRF radio
@@ -99,4 +99,3 @@ void setup()
 
 void loop() {
 }
-

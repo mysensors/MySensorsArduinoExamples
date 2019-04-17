@@ -85,7 +85,7 @@ Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (p
 //#define MY_DEBUG
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
 //#define MY_NODE_ID 1  // Set this to fix your Radio ID or use Auto

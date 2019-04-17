@@ -53,7 +53,7 @@
 #define MY_DEBUG
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24                              // A 2.4Ghz transmitter and receiver, often used with MySensors.
+#define MY_RADIO_RF24                              // A 2.4Ghz transmitter and receiver, often used with MySensors.
 #define MY_RF24_PA_LEVEL RF24_PA_MIN                // This sets a low-power mode for the radio. Useful if you use the verison with the bigger antenna, but don't want to power that from a separate power source. It can also fix problems with fake Chinese versions of the radio.
 // #define MY_RADIO_RFM69                           // 433Mhz transmitter and reveiver.
 
