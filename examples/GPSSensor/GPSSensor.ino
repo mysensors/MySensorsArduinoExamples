@@ -20,22 +20,22 @@
  *
  * REVISION HISTORY
  * Version 1.0 - Henrik Ekblad
- * 
+ *
  * DESCRIPTION
- * Example sketch showing how to interface with a GPS sensor. 
+ * Example sketch showing how to interface with a GPS sensor.
  * A GPS is also an excellent atomic time source.
  * http://www.mysensors.org/build/gps
- */ 
+ */
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG 
+#define MY_DEBUG
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
 // GPS position send interval (in millisectonds)
-#define GPS_SEND_INTERVAL 10000 
+#define GPS_SEND_INTERVAL 10000
 
 // The child id used for the gps sensor
 #define CHILD_ID_GPS 1
@@ -47,9 +47,8 @@ static const int GPS_PIN = A0;
 static const uint32_t GPSBaud = 9600;
 
 // Offset hours adjustment from gps time (UTC)
-const int offset = 1;   
+const int offset = 1;
 
-#include <SPI.h>
 #include <TimeLib.h>
 #include <MySensors.h>
 #include <TinyGPS++.h>
@@ -61,15 +60,15 @@ TinyGPSPlus gps;
 MyMessage msg(CHILD_ID_GPS, V_POSITION);
 
 // The serial connection to the GPS device
-// A5 pin can be left unconnected 
-SoftwareSerial ss(GPS_PIN, A5); 
+// A5 pin can be left unconnected
+SoftwareSerial ss(GPS_PIN, A5);
 
 // Last time GPS position was sent to controller
 unsigned long lastGPSSent = 0;
 
-// Some buffers 
+// Some buffers
 char latBuf[11];
-char lngBuf[11];   
+char lngBuf[11];
 char altBuf[6];
 char payload[30];
 char sz[64];
@@ -81,7 +80,7 @@ void setup() {
 }
 
 
-void present() {
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("GPS Sensor", "1.0");
 
@@ -96,10 +95,10 @@ void loop()
   // Evaluate if it is time to send a new position
   bool timeToSend = currentTime - lastGPSSent > GPS_SEND_INTERVAL;
 
-  // Read gps data  
-  while (ss.available()) 
+  // Read gps data
+  while (ss.available())
     gps.encode(ss.read());
-  
+
   if (timeToSend) {
     // Sync gps time with Arduino
     updateTime();
@@ -121,7 +120,7 @@ void loop()
       sprintf(sz, "%02d/%02d/%02d %02d:%02d:%02d", month(), day(), year(), hour(), minute(), second());
       Serial.println(sz);
 
-      
+
     } else {
       if (millis() > 5000 && gps.charsProcessed() < 10)
         Serial.println(F("No GPS data received: check wiring"));
@@ -141,8 +140,6 @@ void updateTime()
     setTime(t.hour(), t.minute(), t.second(), d.day(), d.month(), d.year());
     adjustTime(offset * SECS_PER_HOUR);
     return;
-  } 
+  }
   Serial.println(F("Unable to adjust time from GPS"));
 }
-
-

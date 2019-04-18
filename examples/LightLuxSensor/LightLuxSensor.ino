@@ -34,7 +34,7 @@
  *   ADDR >>> NC or GND  
  *   SCL  >>> A5
  *   SDA  >>> A4
- * http://www.mysensors.org/build/light
+ * https://www.mysensors.org/build/light-bh1750
  */
 
 
@@ -42,10 +42,9 @@
 #define MY_DEBUG 
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>  
 #include <BH1750.h>
 #include <Wire.h>

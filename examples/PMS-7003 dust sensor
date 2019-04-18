@@ -1,0 +1,344 @@
+/*
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ *  DESCRIPTION
+ *
+ *  Plantower PMS-7003 fine dust sensor
+ *  
+ *  This sensor uses a frickin' laser to measure lots of different fine dust levels, between 0.3 and 10 microns.
+ *  It outputs in um/m3, or you can get access to the raw data of the particles it has counted.
+ *
+ * It needs 5v to operate, but communicates at 3.3 volt. It communicates with your board over serial at 9600 speed. 
+ *  
+ *  
+ *  This code makes use of kindly shared code by Scapeler:
+ *  
+ *  - - -
+ *  Copyright 2017 Scapeler
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * - - -
+*/
+
+//------------------------------------------------------------------------------
+
+// if you uncomment this, you can get test and debug updates about the sensor' wireless connection by using the serial monitor tool.
+#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_RF24                              // A 2.4Ghz transmitter and receiver, often used with MySensors.
+#define MY_RF24_PA_LEVEL RF24_PA_MIN                // This sets a low-power mode for the radio. Useful if you use the verison with the bigger antenna, but don't want to power that from a separate power source. It can also fix problems with fake Chinese versions of the radio.
+// #define MY_RADIO_RFM69                           // 433Mhz transmitter and reveiver.
+
+// Choose if you want this sensor to also be a repeater.
+// #define MY_REPEATER_FEATURE                      // Just remove the two slashes at the beginning of this line to also enable this sensor to act as a repeater for other sensors. If this node is on battery power, you probably shouldn't enable this.
+
+#include <SPI.h>
+#include <MySensors.h>
+#include <SoftwareSerial.h>
+
+#define CHILD_ID_DUST_PM10 0
+#define CHILD_ID_DUST_PM25 1
+#define CHILD_ID_DUST_PM100 2
+
+
+// Mysensors settings.
+MyMessage msgDust10(CHILD_ID_DUST_PM10, V_LEVEL);   // Sets up the message format that we'l be sending to the MySensors gateway later.
+MyMessage msgDust10b(CHILD_ID_DUST_PM10, V_UNIT_PREFIX);
+MyMessage msgDust25(CHILD_ID_DUST_PM25, V_LEVEL);   // Sets up the message format that we'l be sending to the MySensors gateway later.
+MyMessage msgDust25b(CHILD_ID_DUST_PM25, V_UNIT_PREFIX);
+MyMessage msgDust100(CHILD_ID_DUST_PM100, V_LEVEL); // Sets up the message format that we'l be sending to the MySensors gateway later.
+MyMessage msgDust100b(CHILD_ID_DUST_PM100, V_UNIT_PREFIX);
+
+
+// These defines and variables can be changed:
+int dustSlowDown = 20;                              // The dust sensor is internally checked approximately every 700 or 800 milliseconds. Once in how many loops should it send the data?
+unsigned long dustMeasurementInterval = 700;        // This is a fickle thing. Changing it can give more time-outs.
+SoftwareSerial mySerial(10, 11);                    // RX, TX . You can choose other pins if you prefer.
+
+
+// PROBABLY BEST NOT TO CHANGE THESE VARIABLES
+int inputHigh = 0;
+int inputLow = 0;
+uint16_t inputChecksum = 0;                         // variable to caclulate checksum input variables
+uint16_t concPM1_0_CF1;                             // Lots of sensor variables
+uint16_t concPM2_5_CF1;
+uint16_t concPM10_0_CF1;
+uint16_t concPM1_0_amb;
+uint16_t concPM2_5_amb;
+uint16_t concPM10_0_amb;
+uint16_t rawGt0_3um;
+uint16_t rawGt0_5um;
+uint16_t rawGt1_0um;
+uint16_t rawGt2_5um;
+uint16_t rawGt5_0um;
+uint16_t rawGt10_0um;
+uint8_t  version;
+uint8_t  errorCode;
+uint16_t checksum;
+int dustSlowDownCounter = 0;
+
+
+void presentation()
+{
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Air Quality Sensor PMS-7003", "1.1");
+
+  // Register all sensors to gateway (they will be created as child devices): 
+  present(CHILD_ID_DUST_PM10, S_DUST);
+  send(msgDust10b.set("um/m3"));  
+  present(CHILD_ID_DUST_PM25, S_DUST);
+  send(msgDust25b.set("um/m3"));
+  present(CHILD_ID_DUST_PM100, S_DUST);
+  send(msgDust100b.set("um/m3"));  
+}
+
+
+void setup() 
+{
+  Serial.begin(115200);
+  delay(1000);
+  mySerial.begin(9600);
+  delay(1000);
+  Serial.println("hello world, I am a sensor.");
+}
+
+
+void loop() 
+{
+
+  // The dust sensor sends its data continuously, so let's  catch that data.
+  int dustSensorOutput = pms7003ReadData();
+  
+}
+
+
+// MAIN FUNCTION FOR THE DUST SENSOR, Thanks to Scapeler.nl
+int pms7003ReadData() {
+    
+  // while (mySerial.read()!=-1) {};  //clear buffer
+
+  if (mySerial.available() < 32) {
+    if (mySerial.available() == 0) {
+      delay(150);
+      return -1;
+    };
+    if (mySerial.available() > 16) {
+      delay(10);
+      return -1;
+    };
+    if (mySerial.available() > 0) {
+      delay(30);
+      return -1;
+    };
+    delay(100);
+    return -1;
+  }
+  if (mySerial.read() != 0x42) return -1;
+  if (mySerial.read() != 0x4D) return -1;
+
+  inputChecksum = 0x42 + 0x4D;
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  if (inputHigh != 0x00) return -1; 
+  if (inputLow != 0x1c) return -1;    
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  concPM1_0_CF1 = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  concPM2_5_CF1 = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  concPM10_0_CF1 = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  concPM1_0_amb = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  concPM2_5_amb = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  concPM10_0_amb = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  rawGt0_3um = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  rawGt0_5um = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  rawGt1_0um = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  rawGt2_5um = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  rawGt5_0um = inputLow+(inputHigh<<8);
+
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  inputChecksum += inputHigh + inputLow;
+  rawGt10_0um = inputLow+(inputHigh<<8);
+
+  inputLow = mySerial.read();
+  inputChecksum += inputLow;
+  version = inputLow;
+
+  inputLow = mySerial.read();
+  inputChecksum += inputLow;
+  errorCode = inputLow;
+
+  Serial.print("PMS7003;"); 
+
+  // The measurement recalculated to micrograms per cubic meter, a common standard.
+  Serial.print(concPM1_0_CF1);
+  Serial.print(';'); 
+  Serial.print(concPM2_5_CF1);
+  Serial.print(';'); 
+  Serial.print(concPM10_0_CF1);
+  Serial.print(';'); 
+
+  // The measurement recalculated to micrograms per cubic meter, a common standard. Not quite sure what the difference is..
+  Serial.print(concPM1_0_amb);
+  Serial.print(';'); 
+  Serial.print(concPM2_5_amb);
+  Serial.print(';');     
+  Serial.print(concPM10_0_amb);
+  Serial.print(';');     
+
+  // this is the 'raw' data that the sensor gathers internally, before it calculates the above values.
+  Serial.print(rawGt0_3um); // This indicates total number or particles in 0.1 liter of air that have a diameter above 0.3um. This will be the biggest number, as it measures the most particles. But it's very imprecise: 50% accuracy..
+  Serial.print(';');
+  Serial.print(rawGt0_5um); // This indicates the total number or particles in 0.1 liter of air that have a diameter above 0.5um (so it will be a smaller count than the line above)
+  Serial.print(';'); 
+  Serial.print(rawGt1_0um); // This indicates the total number or particles in 0.1 liter of air that have a diameter above 1 micron. And so on..
+  Serial.print(';'); 
+  Serial.print(rawGt2_5um);
+  Serial.print(';'); 
+  Serial.print(rawGt5_0um); // Acording to the datashet, at this point the accuracy has reached at 98%.
+  Serial.print(';'); 
+  Serial.print(rawGt10_0um);
+  Serial.print(';'); 
+  Serial.print(version);
+  Serial.print(';'); 
+  Serial.print(errorCode);
+  Serial.println("---");
+  
+  inputHigh = mySerial.read();
+  inputLow = mySerial.read();
+  checksum = inputLow+(inputHigh<<8);
+  if (checksum != inputChecksum) {
+    Serial.print(';'); 
+    Serial.print(checksum); 
+    Serial.print(';'); 
+    Serial.print(inputChecksum); 
+  }
+
+  // Time to send the results to the gateway.
+  dustSlowDownCounter = dustSlowDownCounter + 1;
+  if(dustSlowDownCounter > dustSlowDown) {
+    
+    /*  MEASUREMENT  */
+    if(rawGt1_0um > 0) {
+      Serial.println(" Dust1_0 = " + String(concPM1_0_CF1));
+      send(msgDust10.set(concPM1_0_CF1,1));
+    }         
+    if(rawGt2_5um > 0){
+      Serial.println(" Dust1_0 = " + String(concPM2_5_CF1));
+      send(msgDust25.set(concPM2_5_CF1,1));
+    }     
+    if(rawGt10_0um > 0){
+      Serial.println(" Dust1_0 = " + String(concPM10_0_CF1));
+      send(msgDust100.set(concPM10_0_CF1,1));
+    }     
+
+    /*  RAW DATA  */            
+    /*
+    if(rawGt0_3um > 0) {
+      Serial.println(" Dust03 = " + String(rawGt0_3um));
+      send(msgDust03.set(rawGt0_3um,1));
+    }
+    if(rawGt0_5um > 0) {
+      Serial.println(" Dust05 = " + String(rawGt0_5um));
+      send(msgDust05.set(rawGt0_5um,1));
+    }
+    if(rawGt1_0um > 0) {
+      Serial.println(" Dust10 = " + String(rawGt1_0um));
+      send(msgDust10.set(rawGt1_0um,1));
+    }
+    if(rawGt2_5um > 0) {
+      Serial.println(" Dust25 = " + String(rawGt2_5um));
+      send(msgDust25.set(rawGt2_5um,1));
+    }
+    if(rawGt5_0um > 0) {
+      Serial.println(" Dust50 = " + String(rawGt5_0um));
+      send(msgDust50.set(rawGt5_0um,1));
+    }      
+    if(rawGt10_0um > 0) {
+      Serial.println(" Dust100 = " + String(rawGt10_0um));
+      send(msgDust100.set(rawGt10_0um,1));
+    }   
+    */
+
+    dustSlowDownCounter = 0;
+  } // End of sensing message.
+  
+  delay(700);  // Data will come between 200 and 800 miliseconds. If you set this be be higher than 700 you will get checksum errors.
+    
+  return concPM2_5_CF1; // this data doesn't really go anywhere..
+}
+
+
+

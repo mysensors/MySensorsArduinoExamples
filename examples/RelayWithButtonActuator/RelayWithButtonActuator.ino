@@ -33,13 +33,12 @@
 #define MY_DEBUG 
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
 // Enabled repeater feature for this node
 #define MY_REPEATER_FEATURE
 
-#include <SPI.h>
 #include <MySensors.h>
 #include <Bounce2.h>
 
@@ -118,4 +117,3 @@ void receive(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
-
