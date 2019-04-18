@@ -50,7 +50,7 @@ void presentation()  {
 }
 
 // This is called when a new time value was received
-void receiveTime(unsigned long time) {
+void receiveTime(uint32_t time) {
   // Ok, set incoming time 
   setTime(time);
   timeReceived = true;
@@ -61,9 +61,7 @@ void loop()
   unsigned long now = millis();
 
   // If no time has been received yet, request it every 10 second from controller
-  // When time has been received, request update every hour
   if ((!timeReceived && (now-lastRequest) > (10UL*1000UL))
-    || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
     // Request time from controller. 
     Serial.println("requesting time");
     requestTime();  
