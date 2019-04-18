@@ -50,7 +50,7 @@ void presentation()  {
 }
 
 // This is called when a new time value was received
-void receiveTime(unsigned long time) {
+void receiveTime(uint32_t time) {
   // Ok, set incoming time 
   setTime(time);
   timeReceived = true;
