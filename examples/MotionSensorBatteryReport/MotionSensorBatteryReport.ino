@@ -82,15 +82,15 @@ void loop()
 	Serial.println(tripped);
 	send(msg.set(tripped?"1":"0"));  // Send tripped value to gw
 
-    // Request how much of the sleep time is remaining
-    sleepTimeMs = getSleepRemaining();
+	// Request how much of the sleep time is remaining
+	sleepTimeMs = getSleepRemaining();
 
 	Serial.print(F("Remaining sleep time [ms] "));
 	Serial.println(sleepTimeMs);
 
-    if (0ul == sleepTimeMs)
-    {
-        // Report battery level and restart the cycle
+	if (0ul == sleepTimeMs)
+	{
+		// Report battery level and restart the cycle
 		const uint8_t batteryPcnt = static_cast<uint8_t>(0.5 + vcc.Read_Perc(VccMin, VccMax));
 		sendBatteryLevel(batteryPcnt);
 
@@ -99,8 +99,8 @@ void loop()
 		Serial.print(F("\tPerc "));
 		Serial.println(batteryPcnt);
 
-        sleepTimeMs = SLEEP_TIME_MS;
-    }
+		sleepTimeMs = SLEEP_TIME_MS;
+	}
 }
 
 
