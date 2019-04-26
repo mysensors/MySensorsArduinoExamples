@@ -64,7 +64,7 @@
 // #define BATTERY_POWERED                        // Just remove the two slashes at the beginning of this line if your node is battery powered. It will then go into deep sleep as much as possible. While it's sleeping it can't work as a repeater!
 
 // Would you like the sensor to generate a weather forecast based on the barometric pressure? 
-#define GENERATE_FORECAST			  // Just remove the two slashes at the beginning of this line to enable this feature.
+#define GENERATE_FORECAST
 
 
 // LIBRARIES
@@ -81,13 +81,13 @@ const float ALTITUDE = 14;                        // Change this value to your l
 unsigned long BME280measurementInterval = 60000;  // Sleep time between reads for the BME sensor (in ms). Keep this value at 60000 if you have enabled the forecast feature, as the forecast algorithm needs a sample every minute.
 #define COMPARE_TEMP 1                            // Send temperature only if it changed? 1 = Yes 0 = No. Can save battery.
 float tempThreshold = 0.1;                        // How big a temperature difference has to minimally  be before an update is sent. Makes the sensor less precise, but also less jittery, and can save battery.
-#define COMPARE_HUM 1                             // Send temperature only if changed? 1 = Yes 0 = No. Can save battery.
+#define COMPARE_HUM 1                             // Send humidity only if changed? 1 = Yes 0 = No. Can save battery.
 float humThreshold = 0.1;                         // How big a humidity difference has to minimally be before an update is sent. Makes the sensor less precise, but also less jittery, and can save battery.
-#define COMPARE_BARO 1                            // Send temperature only if changed? 1 = Yes 0 = No. Can save battery.
+#define COMPARE_BARO 1                            // Send barometric pressure only if changed? 1 = Yes 0 = No. Can save battery.
 float presThreshold = 0.1;                        // How big a barometric difference has to minimally be before an update is sent. Makes the sensor less precise, but also less jittery, and can save battery.
             
 
-//VARIABLES YOU PROBABLY SHOULDN'T CHANGE
+// VARIABLES YOU PROBABLY SHOULDN'T CHANGE
 #define TEMP_CHILD_ID 0				// for MySensors. Within this node each sensortype should have its own ID number.
 #define HUM_CHILD_ID 1				// for MySensors. Within this node each sensortype should have its own ID number.
 #define BARO_CHILD_ID 2 			// for MySensors. Within this node each sensortype should have its own ID number.
@@ -114,7 +114,7 @@ enum FORECAST
 int lastForecast = -1;				// Stores the previous forecast, so it can be compared with a new forecast.
 const int LAST_SAMPLES_COUNT = 5;
 float lastPressureSamples[LAST_SAMPLES_COUNT];
-int minuteCount = 0;				// Helps the forecst algorithm keep time.
+int minuteCount = 0;				// Helps the forecast algorithm keep time.
 bool firstRound = true;				// Helps the forecast algorithm recognise if the sensor has just been powered up.
 float pressureAvg;				// Average value is used in forecast algorithm.
 float pressureAvg2;				// Average after 2 hours is used as reference value for the next iteration.
@@ -271,8 +271,8 @@ void loop() {
     }
 #endif 
 
-  Serial.println("BME280 - Measurement complete. Going to wait until next measurement.");
-  BME280shouldAsk = true; // Ready for the new round.
+    Serial.println("BME280 - Measurement complete. Going to wait until next measurement.");
+    BME280shouldAsk = true; // Ready for the new round.
   }
 
 #ifdef BATTERY_POWERED
@@ -281,7 +281,7 @@ void loop() {
     unsigned long quicktimecheck = millis(); // To check how much time has passed since the beginning of being awake, and then calculate from that how long to sleep until the next intended measuring time, we need to know how many milliseconds have passed.
     unsigned long sleeptime = BME280measurementSleepTime - (quicktimecheck - previousBME280Millis); // How much time has passed already during the calculating? Subtract that from the intended interval time.
     Serial.println("BME280 - zzzzZZZZzzzzZZZZzzzz");
-    sleep (sleeptime);
+    sleep(sleeptime);
     Serial.println("BME280 - Waking up.");
   }
 #endif
@@ -398,8 +398,7 @@ int sample(float pressure) {
   else if ((dP_dt > (-0.25)) && (dP_dt < (-0.05))) {
     forecast = CLOUDY;
   }
-  else if ((dP_dt > 0.05) && (dP_dt < 0.25))
-  {
+  else if ((dP_dt > 0.05) && (dP_dt < 0.25)) {
     forecast = SUNNY;
   }
   else if ((dP_dt >(-0.05)) && (dP_dt < 0.05)) {
