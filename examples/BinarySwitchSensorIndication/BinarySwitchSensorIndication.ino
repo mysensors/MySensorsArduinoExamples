@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -34,6 +34,8 @@
 // Enable and select radio type attached
 #define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
+
+#define MY_INDICATION_HANDLER
 
 #include <Adafruit_NeoPixel.h>
 #include <MsTimer2.h>
@@ -147,4 +149,3 @@ void loop()
      oldValue = value;
   }
 } 
-
