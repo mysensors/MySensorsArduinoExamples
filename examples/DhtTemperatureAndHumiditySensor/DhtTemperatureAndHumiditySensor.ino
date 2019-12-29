@@ -21,6 +21,7 @@
  * REVISION HISTORY
  * Version 1.0: Henrik EKblad
  * Version 1.1 - 2016-07-20: Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
+ * Version 1.2 - 2019-12-29: Fix typo in define - (kumy)
  * 
  * DESCRIPTION
  * This sketch provides an example of how to implement a humidity/temperature
@@ -35,7 +36,7 @@
 #define MY_DEBUG
 
 // Enable and select radio type attached 
-#define MY_RADIO_RF24
+#define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 //#define MY_RS485
  
