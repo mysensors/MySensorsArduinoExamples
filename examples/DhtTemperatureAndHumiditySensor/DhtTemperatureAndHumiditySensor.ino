@@ -22,9 +22,9 @@
  * REVISION HISTORY
  * Version 1.0: Henrik EKblad
  * Version 1.1 - 2016-07-20: Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
- * Version 2.0 - 2018-09-25: Converted to DHTU Adafruit library
- * Version 2.1 - 2018-10-06: Clearer code and... if something changed... every sensor data are sent to gateway
- * Version 2.2 - 2018-12-27: Heat Index calculation included in sketch (based on Adafruit official library)
+ * Version 2.0 - 2018-09-25: Converted to DHTU Adafruit library - Tiberio Galletti
+ * Version 2.1 - 2018-10-06: Clearer code and... if something changed... every sensor data are sent to gateway - Tiberio Galletti
+ * Version 2.2 - 2018-12-27: Heat Index calculation included in sketch (based on Adafruit official library) - Tiberio Galletti
  * 
  * DESCRIPTION
  * This sketch provides an example of how to implement a humidity/temperature sensor using a DHT11/DHT21/DHT22. 
