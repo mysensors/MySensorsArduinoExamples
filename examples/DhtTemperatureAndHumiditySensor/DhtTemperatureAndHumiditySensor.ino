@@ -63,7 +63,7 @@
 #define DHTPOWERPIN       8
 
 
-// Sleep time between sensor updates (in milliseconds) to add to sensor delay (read from sensor data; tipically: 1s)
+// Sleep time between sensor updates (in milliseconds) to add to sensor delay (read from sensor data; typically: 1s)
 static const uint64_t UPDATE_INTERVAL = 60000; 
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
@@ -74,13 +74,13 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 #define CHILD_ID_HUM 0
 #define CHILD_ID_TEMP 1
-#define CHILD_ID_TEMP_HI 2
+#define CHILD_ID_HEATINDEX 2
 
 // Set this offset if the sensors have permanent small offsets to the real temperatures/humidity.
 // In Celsius degrees or moisture percent
 #define SENSOR_HUM_OFFSET 0       // used for temperature data and heat index computation
 #define SENSOR_TEMP_OFFSET 0      // used for humidity data
-#define SENSOR_TEMP_HI_OFFSET 0   // used for heat index data
+#define SENSOR_HEATINDEX_OFFSET 0   // used for heat index data
 
 
 
@@ -99,13 +99,13 @@ uint8_t nNoUpdates = FORCE_UPDATE_N_READS; // send data on start-up
 bool metric = true;
 float temperature;
 float humidity;
-float temperatureHI;
+float heatindex;
 
 
 
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
-MyMessage msgTempHI(CHILD_ID_TEMP_HI, V_TEMP);
+MyMessage msgHeatIndex(CHILD_ID_HEATINDEX, V_TEMP);
 
 
 
@@ -153,11 +153,11 @@ void presentation()
   // Send the sketch version information to the gateway
   sendSketchInfo(SN, SV);
   // Register all sensors to gw (they will be created as child devices)
-  present(CHILD_ID_HUM, S_HUM, "Umidity");
+  present(CHILD_ID_HUM, S_HUM, "Humidity");
   wait(100);                                      //to check: is it needed
   present(CHILD_ID_TEMP, S_TEMP, "Temperature");
   wait(100);                                      //to check: is it needed
-  present(CHILD_ID_TEMP_HI, S_TEMP, "Heat Index");
+  present(CHILD_ID_HEATINDEX, S_TEMP, "Heat Index");
   metric = getControllerConfig().isMetric;
 }
 
@@ -245,17 +245,17 @@ void loop()
 if (fabs(humidity - lastHum)>=0.05 || fabs(temperature - lastTemp)>=0.05 || nNoUpdates >= FORCE_UPDATE_N_READS) {
     lastTemp = temperature;
     lastHum = humidity;
-    temperatureHI = computeHeatIndex(temperature,humidity); //computes Heat Index, in *C
+    heatindex = computeHeatIndex(temperature,humidity); //computes Heat Index, in *C
     nNoUpdates = 0; // Reset no updates counter
     #ifdef MY_DEBUG
     Serial.print("Heat Index: ");
-    Serial.print(temperatureHI);
+    Serial.print(heatindex);
     Serial.println(" *C");    
     #endif    
     
     if (!metric) {
       temperature = 1.8*temperature+32; //convertion to *F
-      temperatureHI = 1.8*temperatureHI+32; //convertion to *F
+      heatindex = 1.8*heatindex+32; //convertion to *F
     }
     
     #ifdef MY_DEBUG
@@ -275,9 +275,9 @@ if (fabs(humidity - lastHum)>=0.05 || fabs(temperature - lastTemp)>=0.05 || nNoU
     #ifdef MY_DEBUG
     wait(100);
     Serial.print("Sending HeatIndex: ");
-    Serial.print(temperatureHI);
+    Serial.print(heatindex);
     #endif    
-    send(msgTempHI.set(temperatureHI + SENSOR_TEMP_HI_OFFSET, 2));
+    send(msgHeatIndex.set(heatindex + SENSOR_HEATINDEX_OFFSET, 2));
 
   }
 
