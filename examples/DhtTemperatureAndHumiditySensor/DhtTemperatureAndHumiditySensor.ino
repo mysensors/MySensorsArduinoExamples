@@ -31,7 +31,7 @@
  * It inlcudes Heat Index *sensor*
  *  
  * For more information, please visit:
- * http://www.mysensors.org/build/TemperatureAndHumidity
+ * http://www.mysensors.org/build/humidity
  * 
  */
 #define SN "TemperatureAndHumidity"
@@ -43,7 +43,7 @@
 //#define MY_DEBUG
 
 // Enable and select radio type attached 
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 //#define MY_RS485
 
@@ -85,8 +85,8 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 
 #include <MySensors.h>  
-#include <Adafruit_Sensor.h>
-#include <DHT_U.h>
+#include <Adafruit_Sensor.h> // Adafruit Unified Sensor
+#include <DHT_U.h> //DHT Sensor library by Adafruit 
 
 DHT_Unified dhtu(DHTDATAPIN, DHTTYPE);
 // See guide for details on Adafruit sensor wiring and usage:
