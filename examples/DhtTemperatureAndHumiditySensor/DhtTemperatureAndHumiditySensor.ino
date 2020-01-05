@@ -86,7 +86,7 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 #include <MySensors.h>  
 #include <Adafruit_Sensor.h> // Adafruit Unified Sensor
-#include <DHT_U.h> //DHT Sensor library by Adafruit 
+#include <DHT_U.h> // DHT Sensor library by Adafruit 
 
 DHT_Unified dhtu(DHTDATAPIN, DHTTYPE);
 // See guide for details on Adafruit sensor wiring and usage:
