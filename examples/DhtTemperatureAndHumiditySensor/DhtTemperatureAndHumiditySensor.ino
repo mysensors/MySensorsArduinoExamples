@@ -20,8 +20,8 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0: Henrik EKblad
- * Version 1.1 - 2016-07-20: Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
+ * Version 1.0 (umidity sensor): Henrik EKblad
+ * Version 1.1 - 2016-07-20 (humidity sensor): Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
  * Version 2.0 - 2018-09-25: Converted to DHTU Adafruit library - Tiberio Galletti
  * Version 2.1 - 2018-10-06: Clearer code and... if something changed... every sensor data are sent to gateway - Tiberio Galletti
  * Version 2.2 - 2018-12-27: Heat Index calculation included in sketch (based on Adafruit official library) - Tiberio Galletti
@@ -31,10 +31,10 @@
  * It inlcudes Heat Index *sensor*
  *  
  * For more information, please visit:
- * http://www.mysensors.org/build/humidity
+ * http://www.mysensors.org/build/TempHumFeel-DHT
  * 
  */
-#define SN "TemperatureAndHumidity"
+#define SN "TempHumFeel"
 #define SV "2.2"
 
 
@@ -83,10 +83,10 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 #define SENSOR_HEATINDEX_OFFSET 0   // used for heat index data
 
 
-
-#include <MySensors.h>  
-#include <Adafruit_Sensor.h> // Adafruit Unified Sensor
-#include <DHT_U.h> // DHT Sensor library by Adafruit 
+// used libraries: they have to be installed by Arduino IDE (menu path: tools - manage libraries)
+#include <MySensors.h>  // *MySensors* by The MySensors Team (tested on version 2.3.2)
+#include <Adafruit_Sensor.h> // Official "Adafruit Unified Sensor" by Adafruit (tested on version 1.1.1)
+#include <DHT_U.h> // Official *DHT Sensor library* by Adafruit (tested on version 1.3.8) 
 
 DHT_Unified dhtu(DHTDATAPIN, DHTTYPE);
 // See guide for details on Adafruit sensor wiring and usage:
