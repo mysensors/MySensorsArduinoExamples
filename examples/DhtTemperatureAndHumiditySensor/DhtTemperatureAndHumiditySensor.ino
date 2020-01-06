@@ -20,7 +20,7 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 (umidity sensor): Henrik EKblad
+ * Version 1.0 (humidity sensor): Henrik EKblad
  * Version 1.1 - 2016-07-20 (humidity sensor): Converted to MySensors v2.0 and added various improvements - Torben Woltjen (mozzbozz)
  * Version 2.0 - 2018-09-25: Converted to DHTU Adafruit library - Tiberio Galletti
  * Version 2.1 - 2018-10-06: Clearer code and... if something changed... every sensor data are sent to gateway - Tiberio Galletti
