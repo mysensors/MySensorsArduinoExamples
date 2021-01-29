@@ -38,7 +38,7 @@ bool SI7021::sensorExists() {
 }
 
 int SI7021::getFahrenheitHundredths() {
-    unsigned int c = getCelsiusHundredths();
+    int c = getCelsiusHundredths();
     return (1.8 * c) + 3200;
 }
 
