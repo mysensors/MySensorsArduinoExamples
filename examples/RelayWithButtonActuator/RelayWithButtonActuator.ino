@@ -80,7 +80,7 @@ void presentation()  {
   sendSketchInfo("Relay & Button", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
-  present(CHILD_ID, S_LIGHT);
+  present(CHILD_ID, S_BINARY);
 }
 
 /*
